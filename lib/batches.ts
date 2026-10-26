@@ -103,6 +103,8 @@ export function serializeBatch(b: Batch & { images?: BatchImage[]; preset?: { na
     presetName: b.preset?.name ?? null,
     settings: parseEditSettings(b.settings),
     hasSnapshot: b.settingsSnapshot != null,
+    /** Settings frozen at the last processing start (what the outputs were made with) */
+    snapshot: b.settingsSnapshot != null ? parseEditSettings(b.settingsSnapshot) : null,
     totalImages: b.totalImages,
     completedCount: b.completedCount,
     failedCount: b.failedCount,

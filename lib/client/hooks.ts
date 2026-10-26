@@ -23,11 +23,14 @@ export function useBatch(id: string, opts: { refetchInterval?: number | false } 
   });
 }
 
-export function useImages(id: string, opts: { refetchInterval?: number | false } = {}) {
+const BUSY = new Set(["QUEUED", "PROCESSING_AI", "PROCESSING_STANDARD"]);
+
+/** Images of a batch; with `pollWhileProcessing`, refetches every 1.5 s while any image is queued/processing. */
+export function useImages(id: string, opts: { pollWhileProcessing?: boolean } = {}) {
   return useQuery({
     queryKey: qk.images(id),
     queryFn: async () => (await apiGet<{ images: ImageDTO[] }>(`/api/batches/${id}/images`)).images,
-    refetchInterval: opts.refetchInterval,
+    refetchInterval: opts.pollWhileProcessing ? (q) => (q.state.data?.some((i) => BUSY.has(i.status)) ? 1500 : false) : false,
   });
 }
 

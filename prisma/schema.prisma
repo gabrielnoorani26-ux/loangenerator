@@ -182,3 +182,14 @@ model AppSettings {
   /// JSON array of {id, name, key}
   watermarkLibrary     String  @default("[]")
 }
+
+/// One row per billable provider call — powers usage stats (AI calls by month).
+model UsageEvent {
+  id        String   @id @default(cuid())
+  batchId   String?
+  /// "ai_edit" | "bg_removal" | "qc"
+  kind      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

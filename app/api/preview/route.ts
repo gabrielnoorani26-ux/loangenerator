@@ -7,6 +7,7 @@ import { applyStandardEdits } from "@/lib/standard-edits";
 import { storage } from "@/lib/storage";
 import { loadWatermarkAssets } from "@/lib/watermarks";
 import { CONTENT_TYPES } from "@/lib/mime";
+import { aiSettingsHash } from "@/lib/ai-hash";
 
 const Body = z.object({
   imageId: IdParam,
@@ -22,7 +23,9 @@ export const POST = route(async (req) => {
   const { imageId, settings, source } = await parseBody(req, Body);
   const image = await prisma.batchImage.findUnique({ where: { id: imageId } });
   if (!image) throw notFound("Image");
-  const useAi = source === "auto" && image.aiIntermediateKey && !image.useOriginal;
+  // Only show the cached AI result when it was produced by the current AI settings.
+  const hash = aiSettingsHash(settings.ai, image.perImageInstruction);
+  const useAi = source === "auto" && !image.useOriginal && image.aiIntermediateKey && hash && image.aiSettingsHash === hash;
   const input = await storage().get(useAi ? image.aiIntermediateKey! : image.originalKey);
   const assets = await loadWatermarkAssets(settings.standard.watermark);
   // Work on a ≤2400px copy for speed; geometry is proportional so the result matches the full-size output.

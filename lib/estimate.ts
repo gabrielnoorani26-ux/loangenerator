@@ -19,7 +19,7 @@ export interface Estimate {
 }
 
 export function bgRemovalAvailable(): boolean {
-  return Boolean(env.bgRemovalProvider && env.bgRemovalApiKey);
+  return env.bgRemovalProvider === "mock" || Boolean(env.bgRemovalProvider && env.bgRemovalApiKey);
 }
 
 /** Count the API calls a run would make, accounting for cache hits and use-original. */

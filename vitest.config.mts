@@ -6,7 +6,12 @@ export default defineConfig({
   test: {
     include: ["tests/unit/**/*.test.ts"],
     environment: "node",
-    testTimeout: 30_000,
+    testTimeout: 60_000,
+    hookTimeout: 120_000,
+    globalSetup: ["tests/setup/global.ts"],
+    setupFiles: ["tests/setup/env.ts"],
+    // One shared SQLite file: run test files sequentially.
+    fileParallelism: false,
     pool: "forks",
   },
 });

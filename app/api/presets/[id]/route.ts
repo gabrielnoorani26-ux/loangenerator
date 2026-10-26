@@ -2,6 +2,8 @@ import { conflict, notFound, ok, parseBody, route } from "@/lib/api";
 import { logActivity } from "@/lib/activity";
 import { prisma } from "@/lib/db";
 import { PresetUpdateSchema, serializePreset } from "@/lib/presets";
+import { generatePresetExample } from "@/lib/preset-example";
+import { storage } from "@/lib/storage";
 
 type Ctx = RouteContext<"/api/presets/[id]">;
 
@@ -29,7 +31,8 @@ export const PATCH = route(async (req, ctx: Ctx) => {
     },
   });
   await logActivity("preset.updated", `Preset “${preset.name}” updated`);
-  return ok({ preset: serializePreset(preset) });
+  if (body.settings) await generatePresetExample(preset);
+  return ok({ preset: serializePreset((await prisma.preset.findUnique({ where: { id } }))!) });
 });
 
 export const DELETE = route(async (_req, ctx: Ctx) => {
@@ -37,6 +40,7 @@ export const DELETE = route(async (_req, ctx: Ctx) => {
   const existing = await prisma.preset.findUnique({ where: { id } });
   if (!existing) throw notFound("Preset");
   await prisma.preset.delete({ where: { id } });
+  if (existing.exampleKey) await storage().delete(existing.exampleKey).catch(() => undefined);
   await prisma.appSettings.updateMany({ where: { defaultPresetId: id }, data: { defaultPresetId: null } });
   await logActivity("preset.deleted", `Preset “${existing.name}” deleted`);
   return ok({ ok: true });

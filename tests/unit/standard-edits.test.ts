@@ -269,3 +269,15 @@ describe("full pipeline", () => {
     expect([r.width, r.height]).toEqual([200, 300]);
   });
 });
+
+describe("preview scaling", () => {
+  it("scales pixel targets down and leaves relative settings alone", async () => {
+    const { scaleStandardForPreview } = await import("@/lib/standard-edits");
+    const s = std({ fit: { enabled: true, width: 2400, height: 2000, paddingPct: 10 }, resize: { enabled: true, mode: "longest", value: 1600 } });
+    const { standard, scale } = scaleStandardForPreview(s, 1200);
+    expect(scale).toBe(0.5);
+    expect([standard.fit.width, standard.fit.height, standard.resize.value]).toEqual([1200, 1000, 800]);
+    expect(standard.fit.paddingPct).toBe(10);
+    expect(scaleStandardForPreview(std(), 1200).scale).toBe(1);
+  });
+});

@@ -2,6 +2,7 @@ import { notFound, ok, route } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { serializePreset, uniquePresetName } from "@/lib/presets";
 import { parseEditSettings } from "@/lib/settings";
+import { generatePresetExample } from "@/lib/preset-example";
 
 export const POST = route(async (_req, ctx: RouteContext<"/api/presets/[id]/duplicate">) => {
   const { id } = await ctx.params;
@@ -15,5 +16,6 @@ export const POST = route(async (_req, ctx: RouteContext<"/api/presets/[id]/dupl
       settings: parseEditSettings(src.settings),
     },
   });
-  return ok({ preset: serializePreset(preset) }, { status: 201 });
+  await generatePresetExample(preset);
+  return ok({ preset: serializePreset((await prisma.preset.findUnique({ where: { id: preset.id } }))!) }, { status: 201 });
 });

@@ -18,6 +18,7 @@ import { buildPrompt } from "@/lib/prompt-builder";
 import { listEdits } from "@/lib/summary";
 import type { Estimate } from "@/lib/estimate";
 import type { BatchDTO } from "@/lib/batches";
+import { useDebounced } from "@/lib/client/use-debounced";
 import { SettingsPanel } from "@/components/settings-panel";
 import { BeforeAfter } from "@/components/before-after";
 import { StickyBar } from "@/components/sticky-bar";
@@ -37,15 +38,6 @@ import {
 } from "@/components/ui/dialog";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn, formatCents } from "@/lib/utils";
-
-function useDebounced<T>(value: T, ms: number): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(t);
-  }, [value, ms]);
-  return v;
-}
 
 export default function SettingsPage() {
   const { id } = useParams<{ id: string }>();

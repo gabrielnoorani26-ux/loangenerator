@@ -58,19 +58,50 @@ export async function decode(input: Buffer, maxLongestSide?: number): Promise<Ra
 // ---------------------------------------------------------------- auto-trim
 
 /**
- * Trim near-uniform borders. Slider 0..100 maps directly to sharp's trim
- * `threshold` (allowed color distance from the top-left pixel; sharp's default
- * is 10). Higher = more aggressive. If the whole image is uniform, it is left
- * untouched rather than trimmed to nothing.
+ * Trim near-uniform borders. The background color is the top-left pixel; a
+ * pixel counts as content when any RGBA channel differs from it by more than
+ * `threshold` (slider 0..100 → 0..100 levels out of 255; default 10). Fully
+ * transparent pixels always count as background. A small 1px margin of
+ * anti-aliasing is kept. If nothing differs, the image is returned unchanged.
  */
-export async function autoTrim(img: RawImage, threshold: number): Promise<RawImage> {
-  try {
-    const out = await toRaw(fromRaw(img).trim({ threshold: Math.max(1, threshold) }));
-    if (out.width < 2 || out.height < 2) return img;
-    return out;
-  } catch {
-    return img;
+export function trimBox(img: RawImage, threshold: number): { left: number; top: number; width: number; height: number } | null {
+  const { data, width, height } = img;
+  const t = Math.max(1, threshold);
+  const r0 = data[0];
+  const g0 = data[1];
+  const b0 = data[2];
+  const a0 = data[3];
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    let row = y * width * 4;
+    for (let x = 0; x < width; x++, row += 4) {
+      const a = data[row + 3];
+      if (a0 === 0 && a === 0) continue;
+      if (
+        Math.abs(data[row] - r0) > t ||
+        Math.abs(data[row + 1] - g0) > t ||
+        Math.abs(data[row + 2] - b0) > t ||
+        Math.abs(a - a0) > t
+      ) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
   }
+  if (maxX < 0) return null;
+  return { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+export async function autoTrim(img: RawImage, threshold: number): Promise<RawImage> {
+  const box = trimBox(img, threshold);
+  if (!box || box.width < 2 || box.height < 2) return img;
+  if (box.width === img.width && box.height === img.height) return img;
+  return toRaw(fromRaw(img).extract(box));
 }
 
 // ---------------------------------------------------------------- crop
@@ -317,12 +348,13 @@ async function encode(
   quality: number,
   meta: SourceMetadata,
   palette: boolean,
+  fast = false,
 ): Promise<Buffer> {
   let s = fromRaw(img);
   if (out.format === "jpg") {
     // JPG has no alpha: flatten transparency onto the configured color.
     const { r, g, b } = hexToRgb(out.flattenColor);
-    s = s.flatten({ background: { r, g, b } }).jpeg({ quality, mozjpeg: true, chromaSubsampling: quality >= 90 ? "4:4:4" : "4:2:0" });
+    s = s.flatten({ background: { r, g, b } }).jpeg({ quality, mozjpeg: !fast, chromaSubsampling: quality >= 90 ? "4:4:4" : "4:2:0" });
   } else if (out.format === "webp") {
     s = s.webp({ quality, alphaQuality: 100, effort: 4 });
   } else {
@@ -344,21 +376,21 @@ async function encode(
  * quality down by 5 (floor 50) until the file fits. PNG has no quality knob,
  * so it steps through palette quantization instead.
  */
-export async function exportImage(img: RawImage, out: OutputSettings, meta: SourceMetadata = {}): Promise<StandardEditResult> {
+export async function exportImage(img: RawImage, out: OutputSettings, meta: SourceMetadata = {}, fast = false): Promise<StandardEditResult> {
   let quality = out.quality;
-  let data = await encode(img, out, quality, meta, false);
+  let data = await encode(img, out, quality, meta, false, fast);
   const limit = out.maxKb ? out.maxKb * 1024 : null;
   if (limit && data.length > limit) {
     if (out.format === "png") {
       for (let q = 100; q >= 50; q -= 5) {
         quality = q;
-        data = await encode(img, out, q, meta, true);
+        data = await encode(img, out, q, meta, true, fast);
         if (data.length <= limit) break;
       }
     } else {
       while (data.length > limit && quality - 5 >= 50) {
         quality -= 5;
-        data = await encode(img, out, quality, meta, false);
+        data = await encode(img, out, quality, meta, false, fast);
       }
     }
   }
@@ -381,6 +413,8 @@ export interface StandardEditOptions {
   assets?: WatermarkAssets;
   /** Source used for metadata carry-over (defaults to `input`) */
   metadataSource?: Buffer;
+  /** Faster, slightly larger encoding (previews) */
+  fast?: boolean;
 }
 
 export async function applyStandardEdits(
@@ -397,7 +431,39 @@ export async function applyStandardEdits(
   img = await applyAdjustments(img, standard.adjustments);
   img = await applyWatermark(img, standard.watermark, opts.assets ?? {});
   const meta = output.stripMetadata ? {} : await readKeepableMetadata(opts.metadataSource ?? input);
-  return exportImage(img, output, meta);
+  return exportImage(img, output, meta, opts.fast);
 }
 
 export const EXT_FOR_FORMAT: Record<OutputSettings["format"], string> = { jpg: "jpg", png: "png", webp: "webp" };
+
+/**
+ * Scale pixel targets (fit canvas, exact/longest/shortest resize) so a preview
+ * renders at ≤ maxSide. Padding, watermark size and margins are relative, so the
+ * preview looks identical to the full-size output, just smaller.
+ * Returns the scaled settings and the factor used (1 = unchanged).
+ */
+export function scaleStandardForPreview(standard: StandardSettings, maxSide: number): { standard: StandardSettings; scale: number } {
+  const targets: number[] = [];
+  if (standard.fit.enabled) targets.push(standard.fit.width, standard.fit.height);
+  if (standard.resize.enabled) {
+    if (standard.resize.mode === "exact") targets.push(standard.resize.width, standard.resize.height);
+    if (standard.resize.mode === "longest" || standard.resize.mode === "shortest") targets.push(standard.resize.value);
+  }
+  const biggest = Math.max(0, ...targets);
+  if (biggest <= maxSide) return { standard, scale: 1 };
+  const s = maxSide / biggest;
+  const r = (n: number) => Math.max(16, Math.round(n * s));
+  return {
+    scale: s,
+    standard: {
+      ...standard,
+      fit: { ...standard.fit, width: r(standard.fit.width), height: r(standard.fit.height) },
+      resize: {
+        ...standard.resize,
+        width: r(standard.resize.width),
+        height: r(standard.resize.height),
+        value: standard.resize.mode === "percentage" ? standard.resize.value : r(standard.resize.value),
+      },
+    },
+  };
+}

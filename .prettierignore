@@ -1,0 +1,5 @@
+lib/generated
+.next
+node_modules
+storage
+prisma/migrations

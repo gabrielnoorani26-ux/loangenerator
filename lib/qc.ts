@@ -80,9 +80,11 @@ export class AnthropicQcProvider implements QcProvider {
   constructor(
     apiKey = env.anthropicApiKey,
     private readonly model = env.anthropicQcModel,
+    /** Injectable for tests */
+    fetchImpl?: typeof fetch,
   ) {
     if (!model) throw new Error("ANTHROPIC_QC_MODEL is not set");
-    this.client = new Anthropic({ apiKey, maxRetries: 2, timeout: 120_000 });
+    this.client = new Anthropic({ apiKey, maxRetries: 2, timeout: 120_000, ...(fetchImpl ? { fetch: fetchImpl } : {}) });
   }
 
   async compare(originalJpeg: Buffer, editedJpeg: Buffer): Promise<string> {

@@ -47,7 +47,11 @@ export function selectForExport(images: ExportImage[], scope: ExportScope, ids?:
   return images
     .filter((i) => i.editedKey && i.outputFilename)
     .filter((i) =>
-      scope === "approved" ? i.status === "APPROVED" : scope === "done" ? i.status === "DONE" || i.status === "APPROVED" : idSet.has(i.id),
+      scope === "approved"
+        ? i.status === "APPROVED"
+        : scope === "done"
+          ? i.status === "DONE" || i.status === "APPROVED"
+          : idSet.has(i.id),
     )
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }
@@ -57,7 +61,14 @@ export function partCount(n: number): number {
 }
 
 function folderFor(img: ExportImage, group: ExportGroup): string {
-  const raw = group === "style" ? img.styleCode : group === "view" ? img.viewAngle?.toLowerCase() : group === "color" ? img.colorName : null;
+  const raw =
+    group === "style"
+      ? img.styleCode
+      : group === "view"
+        ? img.viewAngle?.toLowerCase()
+        : group === "color"
+          ? img.colorName
+          : null;
   if (group === "flat") return "";
   return sanitizeFilenamePart(raw ?? "") || "unassigned";
 }
@@ -92,7 +103,11 @@ export function csvCell(v: unknown): string {
 }
 
 /** Plan the entries (and manifest rows) for one part. `part` is 1-based. */
-export function planPart(selected: ExportImage[], opts: ExportOptions, part: number): { entries: ZipEntry[]; manifest: string | null } {
+export function planPart(
+  selected: ExportImage[],
+  opts: ExportOptions,
+  part: number,
+): { entries: ZipEntry[]; manifest: string | null } {
   const slice = selected.slice((part - 1) * PART_SIZE, part * PART_SIZE);
   const taken = new Set<string>();
   const entries: ZipEntry[] = [];

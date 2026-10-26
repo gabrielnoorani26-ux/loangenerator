@@ -10,16 +10,24 @@ export async function getStats(now = new Date()) {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const yearAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
-  const [processedWeek, activeBatches, aiMonth, reviewed, totalImages, events, topPresets, batchCount] = await Promise.all([
-    prisma.batchImage.count({ where: { editedKey: { not: null }, updatedAt: { gte: weekAgo } } }),
-    prisma.batch.count({ where: { status: { in: ["PROCESSING", "PAUSED", "REVIEW"] } } }),
-    prisma.usageEvent.count({ where: { kind: { in: ["ai_edit", "bg_removal"] }, createdAt: { gte: monthStart } } }),
-    prisma.batch.aggregate({ where: { completedCount: { gt: 0 } }, _sum: { approvedCount: true, completedCount: true } }),
-    prisma.batchImage.count(),
-    prisma.usageEvent.findMany({ where: { createdAt: { gte: yearAgo } }, select: { kind: true, createdAt: true } }),
-    prisma.preset.findMany({ orderBy: { usageCount: "desc" }, take: 5, select: { id: true, name: true, usageCount: true } }),
-    prisma.batch.count(),
-  ]);
+  const [processedWeek, activeBatches, aiMonth, reviewed, totalImages, events, topPresets, batchCount] =
+    await Promise.all([
+      prisma.batchImage.count({ where: { editedKey: { not: null }, updatedAt: { gte: weekAgo } } }),
+      prisma.batch.count({ where: { status: { in: ["PROCESSING", "PAUSED", "REVIEW"] } } }),
+      prisma.usageEvent.count({ where: { kind: { in: ["ai_edit", "bg_removal"] }, createdAt: { gte: monthStart } } }),
+      prisma.batch.aggregate({
+        where: { completedCount: { gt: 0 } },
+        _sum: { approvedCount: true, completedCount: true },
+      }),
+      prisma.batchImage.count(),
+      prisma.usageEvent.findMany({ where: { createdAt: { gte: yearAgo } }, select: { kind: true, createdAt: true } }),
+      prisma.preset.findMany({
+        orderBy: { usageCount: "desc" },
+        take: 5,
+        select: { id: true, name: true, usageCount: true },
+      }),
+      prisma.batch.count(),
+    ]);
 
   const months: { month: string; label: string; aiCalls: number; qcCalls: number }[] = [];
   for (let i = 11; i >= 0; i--) {

@@ -2,7 +2,18 @@
  * Output filename patterns.
  * Tokens: {original} {batch} {brand} {style} {color} {view} {index} {date} {width} {height}
  */
-export const NAMING_TOKENS = ["original", "batch", "brand", "style", "color", "view", "index", "date", "width", "height"] as const;
+export const NAMING_TOKENS = [
+  "original",
+  "batch",
+  "brand",
+  "style",
+  "color",
+  "view",
+  "index",
+  "date",
+  "width",
+  "height",
+] as const;
 
 export interface NamingContext {
   originalFilename: string;
@@ -77,7 +88,12 @@ export function uniqueFilename(base: string, ext: string, taken: Set<string>): s
   return name;
 }
 
-export function exampleFilename(pattern: string, ext: string, batchName = "Spring Drop", brand = "Chelsea Crew"): string {
+export function exampleFilename(
+  pattern: string,
+  ext: string,
+  batchName = "Spring Drop",
+  brand = "Chelsea Crew",
+): string {
   return `${renderPattern(pattern, {
     originalFilename: "IMG_0042.jpg",
     batchName,

@@ -40,7 +40,10 @@ export const DELETE = route(async (_req, ctx: Ctx) => {
   const existing = await prisma.preset.findUnique({ where: { id } });
   if (!existing) throw notFound("Preset");
   await prisma.preset.delete({ where: { id } });
-  if (existing.exampleKey) await storage().delete(existing.exampleKey).catch(() => undefined);
+  if (existing.exampleKey)
+    await storage()
+      .delete(existing.exampleKey)
+      .catch(() => undefined);
   await prisma.appSettings.updateMany({ where: { defaultPresetId: id }, data: { defaultPresetId: null } });
   await logActivity("preset.deleted", `Preset “${existing.name}” deleted`);
   return ok({ ok: true });

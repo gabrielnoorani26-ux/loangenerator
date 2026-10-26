@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
-import { AnthropicQcProvider, MockQcProvider, parseQcResponse, QC_INSTRUCTION, QC_UNAVAILABLE, runQc, toQcJpeg, type QcProvider } from "@/lib/qc";
+import {
+  AnthropicQcProvider,
+  MockQcProvider,
+  parseQcResponse,
+  QC_INSTRUCTION,
+  QC_UNAVAILABLE,
+  runQc,
+  toQcJpeg,
+  type QcProvider,
+} from "@/lib/qc";
 import { productPng } from "./helpers";
 
 const fake = (replies: (string | Error)[]): QcProvider & { calls: number } => ({
@@ -16,8 +25,16 @@ const fake = (replies: (string | Error)[]): QcProvider & { calls: number } => ({
 
 describe("parseQcResponse", () => {
   it("accepts strict JSON and JSON wrapped in prose/code fences", () => {
-    expect(parseQcResponse('{"score": 92, "issues": [], "verdict": "pass"}')).toEqual({ score: 92, issues: [], verdict: "pass" });
-    expect(parseQcResponse('```json\n{"score": 61.6, "issues": ["halo"], "verdict": "review"}\n```')).toEqual({ score: 62, issues: ["halo"], verdict: "review" });
+    expect(parseQcResponse('{"score": 92, "issues": [], "verdict": "pass"}')).toEqual({
+      score: 92,
+      issues: [],
+      verdict: "pass",
+    });
+    expect(parseQcResponse('```json\n{"score": 61.6, "issues": ["halo"], "verdict": "review"}\n```')).toEqual({
+      score: 62,
+      issues: ["halo"],
+      verdict: "review",
+    });
   });
   it("rejects invalid shapes", () => {
     expect(parseQcResponse("looks fine")).toBeNull();
@@ -29,7 +46,11 @@ describe("parseQcResponse", () => {
 describe("runQc", () => {
   it("retries once on unparseable output, then succeeds", async () => {
     const p = fake(["nope", '{"score": 88, "issues": [], "verdict": "pass"}']);
-    expect(await runQc(p, await productPng(), await productPng(), 70)).toEqual({ score: 88, issues: [], verdict: "pass" });
+    expect(await runQc(p, await productPng(), await productPng(), 70)).toEqual({
+      score: 88,
+      issues: [],
+      verdict: "pass",
+    });
     expect(p.calls).toBe(2);
   });
   it("falls back to review after two failures and never throws", async () => {
@@ -48,7 +69,11 @@ describe("runQc", () => {
 
 describe("QC images", () => {
   it("downscales to ≤1024px JPEG", async () => {
-    const big = await sharp({ create: { width: 3000, height: 2000, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).png().toBuffer();
+    const big = await sharp({
+      create: { width: 3000, height: 2000, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    })
+      .png()
+      .toBuffer();
     const meta = await sharp(await toQcJpeg(big)).metadata();
     expect(meta.format).toBe("jpeg");
     expect(Math.max(meta.width!, meta.height!)).toBe(1024);
@@ -80,7 +105,9 @@ describe("AnthropicQcProvider request", () => {
     const c = captured!;
     expect(c.url).toContain("/v1/messages");
     expect(c.body.model).toBe("claude-opus-5-5");
-    const content = (c.body.messages as { content: { type: string; text?: string; source?: { media_type: string } }[] }[])[0].content;
+    const content = (
+      c.body.messages as { content: { type: string; text?: string; source?: { media_type: string } }[] }[]
+    )[0].content;
     expect(content.filter((b) => b.type === "image")).toHaveLength(2);
     expect(content.find((b) => b.type === "image")!.source!.media_type).toBe("image/jpeg");
     expect(content.at(-1)!.text).toBe(QC_INSTRUCTION);

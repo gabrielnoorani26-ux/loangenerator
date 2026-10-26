@@ -30,7 +30,9 @@ export const POST = route(async (req) => {
     if (!image) throw notFound("Image");
     // Only show the cached AI result when it was produced by the current AI settings.
     const hash = aiSettingsHash(settings.ai, image.perImageInstruction);
-    useAi = Boolean(source === "auto" && !image.useOriginal && image.aiIntermediateKey && hash && image.aiSettingsHash === hash);
+    useAi = Boolean(
+      source === "auto" && !image.useOriginal && image.aiIntermediateKey && hash && image.aiSettingsHash === hash,
+    );
     input = await storage().get(useAi ? image.aiIntermediateKey! : image.originalKey);
   } else {
     input = await getSampleImage();
@@ -44,11 +46,12 @@ export const POST = route(async (req) => {
   let data = full.data;
   if (Math.max(full.width, full.height) > PREVIEW_MAX) {
     const s = sharp(data).resize(PREVIEW_MAX, PREVIEW_MAX, { fit: "inside" });
-    data = await (settings.output.format === "jpg"
-      ? s.jpeg({ quality: 88 })
-      : settings.output.format === "webp"
-        ? s.webp({ quality: 88 })
-        : s.png()
+    data = await (
+      settings.output.format === "jpg"
+        ? s.jpeg({ quality: 88 })
+        : settings.output.format === "webp"
+          ? s.webp({ quality: 88 })
+          : s.png()
     ).toBuffer();
   }
   return new Response(new Uint8Array(data), {

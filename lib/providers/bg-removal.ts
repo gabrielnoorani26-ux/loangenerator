@@ -54,7 +54,9 @@ export class HttpBackgroundRemovalProvider implements BackgroundRemovalProvider 
   async testConnection(): Promise<void> {
     // Neither API has a free "ping"; a 1×1 request is the cheapest authenticated call.
     // Photoroom's sandbox keys and remove.bg previews make this negligible.
-    const px = await sharp({ create: { width: 64, height: 64, channels: 3, background: "#888" } }).png().toBuffer();
+    const px = await sharp({ create: { width: 64, height: 64, channels: 3, background: "#888" } })
+      .png()
+      .toBuffer();
     await this.removeToWhite(px);
   }
 }

@@ -89,7 +89,9 @@ export class Worker {
       if (free <= 0) return;
       const jobs = await claimJobs(free);
       for (const job of jobs) {
-        const p = this.run(job, app.maxRetries, app.autoQcEnabled, app.qcThreshold).finally(() => this.active.delete(job.image.id));
+        const p = this.run(job, app.maxRetries, app.autoQcEnabled, app.qcThreshold).finally(() =>
+          this.active.delete(job.image.id),
+        );
         this.active.set(job.image.id, p);
       }
     } finally {
@@ -103,7 +105,12 @@ export class Worker {
     while (Date.now() < end) {
       await this.tick();
       if (this.active.size) await Promise.race([...this.active.values()]);
-      const remaining = await prisma.batchImage.count({ where: { status: { in: ["QUEUED", "PROCESSING_AI", "PROCESSING_STANDARD"] }, batch: { status: { in: ["PROCESSING", "REVIEW", "COMPLETE"] } } } });
+      const remaining = await prisma.batchImage.count({
+        where: {
+          status: { in: ["QUEUED", "PROCESSING_AI", "PROCESSING_STANDARD"] },
+          batch: { status: { in: ["PROCESSING", "REVIEW", "COMPLETE"] } },
+        },
+      });
       if (remaining === 0 && this.active.size === 0) return;
       if (!this.active.size) await new Promise((r) => setTimeout(r, 50));
     }
@@ -117,7 +124,8 @@ export class Worker {
       const batch = await prisma.batch.findUnique({ where: { id: img.batchId } });
       if (!batch) return;
       const settings = parseEditSettings(batch.settingsSnapshot ?? batch.settings);
-      const index = (await prisma.batchImage.count({ where: { batchId: img.batchId, sortOrder: { lt: img.sortOrder } } })) + 1;
+      const index =
+        (await prisma.batchImage.count({ where: { batchId: img.batchId, sortOrder: { lt: img.sortOrder } } })) + 1;
       const pImage: PipelineImage = {
         id: img.id,
         batchId: img.batchId,
@@ -173,7 +181,9 @@ export class Worker {
         this.penaltyUntil = Date.now() + RATE_LIMIT_PENALTY_MS;
         this.log(`rate limited — pausing claims ${Math.round(wait / 1000)}s and halving concurrency`);
       }
-      this.log(`${img.originalFilename}: ${outcome.error.kind}${outcome.retried ? ` (retry in ${outcome.delayMs / 1000}s)` : " (failed)"}`);
+      this.log(
+        `${img.originalFilename}: ${outcome.error.kind}${outcome.retried ? ` (retry in ${outcome.delayMs / 1000}s)` : " (failed)"}`,
+      );
     } finally {
       clearInterval(hb);
     }
@@ -182,7 +192,10 @@ export class Worker {
   private async withNameLock<T>(batchId: string, fn: () => Promise<T>): Promise<T> {
     const prev = this.nameLocks.get(batchId) ?? Promise.resolve();
     const next = prev.then(fn, fn);
-    this.nameLocks.set(batchId, next.catch(() => undefined));
+    this.nameLocks.set(
+      batchId,
+      next.catch(() => undefined),
+    );
     return next;
   }
 }

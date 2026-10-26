@@ -28,24 +28,25 @@ export const POST = route(async (req) => {
   inFlight.add(imageId);
   try {
     let recorded = false;
-    const result = await runAiStep(
-      { ...image, useOriginal: false, index: 1 },
-      settings,
-      {
-        storage: storage(),
-        editProvider: getImageEditProvider,
-        bgProvider: getBackgroundRemovalProvider,
-        qcProvider: getQcProvider,
-        onAiResult: async (r) => {
-          recorded = true;
-          await prisma.$transaction([
-            prisma.batchImage.update({ where: { id: imageId }, data: { aiIntermediateKey: r.key, aiSettingsHash: r.hash } }),
-            prisma.batch.update({ where: { id: image.batchId }, data: { aiCallsUsed: { increment: 1 } } }),
-            prisma.usageEvent.create({ data: { batchId: image.batchId, kind: r.route === "white-bg" ? "bg_removal" : "ai_edit" } }),
-          ]);
-        },
+    const result = await runAiStep({ ...image, useOriginal: false, index: 1 }, settings, {
+      storage: storage(),
+      editProvider: getImageEditProvider,
+      bgProvider: getBackgroundRemovalProvider,
+      qcProvider: getQcProvider,
+      onAiResult: async (r) => {
+        recorded = true;
+        await prisma.$transaction([
+          prisma.batchImage.update({
+            where: { id: imageId },
+            data: { aiIntermediateKey: r.key, aiSettingsHash: r.hash },
+          }),
+          prisma.batch.update({ where: { id: image.batchId }, data: { aiCallsUsed: { increment: 1 } } }),
+          prisma.usageEvent.create({
+            data: { batchId: image.batchId, kind: r.route === "white-bg" ? "bg_removal" : "ai_edit" },
+          }),
+        ]);
       },
-    );
+    });
     if (recorded) await logActivity("ai.test", `AI test on ${image.originalFilename}`, image.batchId);
     return ok({ cached: !result?.called, aiUrl: result ? `/api/files/${result.key}` : null });
   } catch (err) {

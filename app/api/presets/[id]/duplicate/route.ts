@@ -17,5 +17,8 @@ export const POST = route(async (_req, ctx: RouteContext<"/api/presets/[id]/dupl
     },
   });
   await generatePresetExample(preset);
-  return ok({ preset: serializePreset((await prisma.preset.findUnique({ where: { id: preset.id } }))!) }, { status: 201 });
+  return ok(
+    { preset: serializePreset((await prisma.preset.findUnique({ where: { id: preset.id } }))!) },
+    { status: 201 },
+  );
 });

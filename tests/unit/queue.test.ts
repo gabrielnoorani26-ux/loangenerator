@@ -89,7 +89,19 @@ describe("queue + worker", () => {
     // change only standard settings, then start again
     await prisma.batch.update({
       where: { id: batch.id },
-      data: { settings: { ...(await prisma.batch.findUniqueOrThrow({ where: { id: batch.id } })).settings as object, output: { format: "png", quality: 90, maxKb: null, stripMetadata: true, namingPattern: "{original}", flattenColor: "#FFFFFF" } } },
+      data: {
+        settings: {
+          ...((await prisma.batch.findUniqueOrThrow({ where: { id: batch.id } })).settings as object),
+          output: {
+            format: "png",
+            quality: 90,
+            maxKb: null,
+            stripMetadata: true,
+            namingPattern: "{original}",
+            flattenColor: "#FFFFFF",
+          },
+        },
+      },
     });
     const est = await startBatch(batch.id);
     expect(est.cacheHits).toBe(3);
@@ -111,7 +123,9 @@ describe("queue + worker", () => {
   });
 
   it("fails after maxRetries with a human-readable message, without stopping the batch", async () => {
-    const provider = new ScriptedProvider((_n, req) => (req.prompt.includes("ALWAYS-FAIL") ? new ProviderError("timeout") : null));
+    const provider = new ScriptedProvider((_n, req) =>
+      req.prompt.includes("ALWAYS-FAIL") ? new ProviderError("timeout") : null,
+    );
     setProviders(provider, null);
     await prisma.appSettings.create({ data: { id: "singleton", maxRetries: 2, maxConcurrentAiCalls: 1 } });
     const batch = await makeBatch(2, AI_SETTINGS);
@@ -165,7 +179,10 @@ describe("queue + worker", () => {
     const batch = await makeBatch(2, AI_SETTINGS);
     await startBatch(batch.id);
     const [job] = await claimJobs(1);
-    await prisma.batchImage.update({ where: { id: job.image.id }, data: { lockedAt: new Date(Date.now() - 4 * 60_000) } });
+    await prisma.batchImage.update({
+      where: { id: job.image.id },
+      data: { lockedAt: new Date(Date.now() - 4 * 60_000) },
+    });
     const [fresh] = await claimJobs(1);
     expect(await recoverStuck()).toBe(1);
     expect((await prisma.batchImage.findUniqueOrThrow({ where: { id: job.image.id } })).status).toBe("QUEUED");

@@ -3,7 +3,19 @@ import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Download, Grid2x2, Grid3x3, LayoutGrid, Loader2, RefreshCw, RotateCcw, Sparkles, Trash2, X } from "lucide-react";
+import {
+  Check,
+  Download,
+  Grid2x2,
+  Grid3x3,
+  LayoutGrid,
+  Loader2,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 import { apiSend, errorMessage } from "@/lib/client/api";
 import { qk, useBatch, useImages } from "@/lib/client/hooks";
 import type { ImageDTO } from "@/lib/batches";
@@ -69,22 +81,35 @@ export default function ReviewPage() {
   const visible = useMemo(() => {
     const list = (images ?? []).filter((i) => matches(i, filter));
     if (sort === "qc") list.sort((a, b) => (a.qcScore ?? 101) - (b.qcScore ?? 101));
-    else if (sort === "filename") list.sort((a, b) => (a.outputFilename ?? a.originalFilename).localeCompare(b.outputFilename ?? b.originalFilename));
+    else if (sort === "filename")
+      list.sort((a, b) =>
+        (a.outputFilename ?? a.originalFilename).localeCompare(b.outputFilename ?? b.originalFilename),
+      );
     return list;
   }, [images, filter, sort]);
 
   const openIndex = openId ? visible.findIndex((i) => i.id === openId) : -1;
-  const openImage = openIndex >= 0 ? visible[openIndex] : openId ? (images?.find((i) => i.id === openId) ?? null) : null;
+  const openImage =
+    openIndex >= 0 ? visible[openIndex] : openId ? (images?.find((i) => i.id === openId) ?? null) : null;
   const selectedIds = [...selected].filter((sid) => images?.some((i) => i.id === sid));
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: qk.images(id) });
     qc.invalidateQueries({ queryKey: qk.batch(id) });
   };
-  const bulk = async (action: string, extra: Record<string, unknown> = {}, ids = selectedIds, msg?: (n: number) => string) => {
+  const bulk = async (
+    action: string,
+    extra: Record<string, unknown> = {},
+    ids = selectedIds,
+    msg?: (n: number) => string,
+  ) => {
     setBusy(action);
     try {
-      const r = await apiSend<{ affected: number }>(`/api/batches/${id}/images/bulk`, "POST", { action, ids, ...extra });
+      const r = await apiSend<{ affected: number }>(`/api/batches/${id}/images/bulk`, "POST", {
+        action,
+        ids,
+        ...extra,
+      });
       if (msg) toast.success(msg(r.affected));
       if (action === "delete") setSelected(new Set());
       refresh();
@@ -124,7 +149,12 @@ export default function ReviewPage() {
     });
   const allVisibleSelected = visible.length > 0 && visible.every((i) => selected.has(i.id));
 
-  const gridCols = size === "s" ? "grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9" : size === "m" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+  const gridCols =
+    size === "s"
+      ? "grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9"
+      : size === "m"
+        ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+        : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
   const total = images?.length ?? 0;
   const approvalRate = total ? Math.round((counts.approved / total) * 100) : 0;
 
@@ -188,7 +218,13 @@ export default function ReviewPage() {
               <SelectItem value="filename">Filename</SelectItem>
             </SelectContent>
           </Select>
-          <ToggleGroup type="single" value={size} onValueChange={(v) => v && setSize(v as Size)} aria-label="Thumbnail size" className="hidden sm:inline-flex">
+          <ToggleGroup
+            type="single"
+            value={size}
+            onValueChange={(v) => v && setSize(v as Size)}
+            aria-label="Thumbnail size"
+            className="hidden sm:inline-flex"
+          >
             <ToggleGroupItem value="s" aria-label="Small thumbnails">
               <Grid3x3 />
             </ToggleGroupItem>
@@ -204,21 +240,47 @@ export default function ReviewPage() {
 
       {/* Bulk action bar */}
       {selectedIds.length > 0 && (
-        <div className="sticky top-2 z-20 flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-accent px-3 py-2 shadow-sm" data-testid="bulk-bar">
+        <div
+          className="sticky top-2 z-20 flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-accent px-3 py-2 shadow-sm"
+          data-testid="bulk-bar"
+        >
           <span className="mr-2 text-sm font-medium">{selectedIds.length} selected</span>
-          <Button size="sm" variant="success" disabled={!!busy} onClick={() => bulk("approve", {}, selectedIds, (n) => `Approved ${n}`)}>
+          <Button
+            size="sm"
+            variant="success"
+            disabled={!!busy}
+            onClick={() => bulk("approve", {}, selectedIds, (n) => `Approved ${n}`)}
+          >
             <Check /> Approve
           </Button>
-          <Button size="sm" variant="outline" disabled={!!busy} onClick={() => bulk("reject", {}, selectedIds, (n) => `Rejected ${n}`)}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!!busy}
+            onClick={() => bulk("reject", {}, selectedIds, (n) => `Rejected ${n}`)}
+          >
             <X /> Reject
           </Button>
           <Button size="sm" variant="outline" disabled={!!busy} onClick={() => setRerunOpen(true)}>
             <Sparkles /> Re-run AI
           </Button>
-          <Button size="sm" variant="outline" disabled={!!busy} onClick={() => bulk("reapply-standard", {}, selectedIds, (n) => `Re-applying standard edits on ${n} (no AI cost)`)}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!!busy}
+            onClick={() =>
+              bulk("reapply-standard", {}, selectedIds, (n) => `Re-applying standard edits on ${n} (no AI cost)`)
+            }
+          >
             <RefreshCw /> Re-apply standard
           </Button>
-          <Button size="sm" variant="outline" className="text-destructive" disabled={!!busy} onClick={() => setConfirmDelete(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive"
+            disabled={!!busy}
+            onClick={() => setConfirmDelete(true)}
+          >
             <Trash2 /> Delete
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
@@ -289,7 +351,14 @@ export default function ReviewPage() {
         onConfirm={() => bulk("delete", {}, selectedIds, (n) => `Deleted ${n}`)}
       />
       {exportOpen && batch && images && (
-        <ExportDialog open={exportOpen} onOpenChange={setExportOpen} batchId={id} batchStatus={batch.status} images={images} selectedIds={selectedIds} />
+        <ExportDialog
+          open={exportOpen}
+          onOpenChange={setExportOpen}
+          batchId={id}
+          batchStatus={batch.status}
+          images={images}
+          selectedIds={selectedIds}
+        />
       )}
     </div>
   );
@@ -299,7 +368,14 @@ function Stat({ label, value, tone }: { label: string; value: React.ReactNode; t
   return (
     <span>
       <span className="text-muted-foreground">{label}: </span>
-      <span className={cn("font-semibold tabular-nums", tone === "amber" && "text-amber-700", tone === "green" && "text-emerald-700", tone === "red" && "text-destructive")}>
+      <span
+        className={cn(
+          "font-semibold tabular-nums",
+          tone === "amber" && "text-amber-700",
+          tone === "green" && "text-emerald-700",
+          tone === "red" && "text-destructive",
+        )}
+      >
         {value}
       </span>
     </span>
@@ -337,9 +413,18 @@ function ReviewCard({
       )}
       data-testid="review-card"
     >
-      <button className="checkerboard relative block aspect-square w-full cursor-zoom-in" onClick={onOpen} aria-label={`Open ${image.outputFilename ?? image.originalFilename}`}>
+      <button
+        className="checkerboard relative block aspect-square w-full cursor-zoom-in"
+        onClick={onOpen}
+        aria-label={`Open ${image.outputFilename ?? image.originalFilename}`}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={(image.editedThumbUrl ?? image.originalThumbUrl) || ""} alt="" className="size-full object-contain" loading="lazy" />
+        <img
+          src={(image.editedThumbUrl ?? image.originalThumbUrl) || ""}
+          alt=""
+          className="size-full object-contain"
+          loading="lazy"
+        />
         {processing && (
           <span className="absolute inset-0 flex items-center justify-center bg-white/50">
             <Loader2 className="size-6 animate-spin text-blue-600" />
@@ -361,16 +446,32 @@ function ReviewCard({
             <ImageStatusBadge status={image.status} needsReview={image.needsReview} />
             {reviewable && (
               <div className="flex gap-1">
-                <Button size="icon-sm" variant="ghost" className="size-7 text-emerald-700 hover:bg-emerald-50" onClick={onApprove} aria-label="Approve" disabled={image.status === "APPROVED"}>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  className="size-7 text-emerald-700 hover:bg-emerald-50"
+                  onClick={onApprove}
+                  aria-label="Approve"
+                  disabled={image.status === "APPROVED"}
+                >
                   <Check />
                 </Button>
-                <Button size="icon-sm" variant="ghost" className="size-7 text-destructive hover:bg-red-50" onClick={onReject} aria-label="Reject" disabled={image.status === "REJECTED"}>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  className="size-7 text-destructive hover:bg-red-50"
+                  onClick={onReject}
+                  aria-label="Reject"
+                  disabled={image.status === "REJECTED"}
+                >
                   <X />
                 </Button>
               </div>
             )}
           </div>
-          {image.status === "FAILED" && image.errorMessage && <p className="line-clamp-2 text-[11px] text-destructive">{image.errorMessage}</p>}
+          {image.status === "FAILED" && image.errorMessage && (
+            <p className="line-clamp-2 text-[11px] text-destructive">{image.errorMessage}</p>
+          )}
         </div>
       )}
     </div>

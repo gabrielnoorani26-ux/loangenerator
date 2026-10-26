@@ -77,7 +77,12 @@ export function parseFilename(filename: string): SmartFillResult {
   } else {
     styleIdxs = [firstDigit];
   }
-  const styleCode = styleIdxs.length ? styleIdxs.map((i) => tokens[i]).join("-").toUpperCase() : null;
+  const styleCode = styleIdxs.length
+    ? styleIdxs
+        .map((i) => tokens[i])
+        .join("-")
+        .toUpperCase()
+    : null;
 
   // Color: remaining tokens that are not purely numeric (sequence numbers like "02").
   const colorTokens = tokens.filter(

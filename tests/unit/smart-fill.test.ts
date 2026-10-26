@@ -3,10 +3,18 @@ import { parseFilename } from "@/lib/smart-fill";
 
 describe("parseFilename", () => {
   it("parses the canonical style_color_view pattern", () => {
-    expect(parseFilename("CC2045_black_side.jpg")).toEqual({ styleCode: "CC2045", colorName: "black", viewAngle: "SIDE" });
+    expect(parseFilename("CC2045_black_side.jpg")).toEqual({
+      styleCode: "CC2045",
+      colorName: "black",
+      viewAngle: "SIDE",
+    });
   });
   it("splits on hyphens too", () => {
-    expect(parseFilename("CC2045-tan-front.png")).toEqual({ styleCode: "CC2045", colorName: "tan", viewAngle: "FRONT" });
+    expect(parseFilename("CC2045-tan-front.png")).toEqual({
+      styleCode: "CC2045",
+      colorName: "tan",
+      viewAngle: "FRONT",
+    });
   });
   it("handles multi-word colors and trailing sequence numbers", () => {
     expect(parseFilename("ar1001_light_blue_pair_02.JPG")).toEqual({
@@ -16,7 +24,11 @@ describe("parseFilename", () => {
     });
   });
   it("joins a letter prefix and number into one style code", () => {
-    expect(parseFilename("AR-1001-black-sole.jpg")).toEqual({ styleCode: "AR-1001", colorName: "black", viewAngle: "SOLE" });
+    expect(parseFilename("AR-1001-black-sole.jpg")).toEqual({
+      styleCode: "AR-1001",
+      colorName: "black",
+      viewAngle: "SOLE",
+    });
   });
   it("maps view synonyms", () => {
     expect(parseFilename("CC1_red_rear.jpg").viewAngle).toBe("BACK");

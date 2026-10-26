@@ -18,7 +18,10 @@ export async function generatePresetExample(preset: Preset): Promise<string | nu
     const thumb = await sharp(out.data).resize(480, 480, { fit: "inside" }).webp({ quality: 80 }).toBuffer();
     const key = keys.presetExample(`${preset.id}-${Date.now()}`);
     await storage().put(key, thumb);
-    if (preset.exampleKey) await storage().delete(preset.exampleKey).catch(() => undefined);
+    if (preset.exampleKey)
+      await storage()
+        .delete(preset.exampleKey)
+        .catch(() => undefined);
     await prisma.preset.update({ where: { id: preset.id }, data: { exampleKey: key } });
     return key;
   } catch (err) {

@@ -29,7 +29,8 @@ export default function ProcessingPage() {
   const { data: progress, isLoading } = useQuery({
     queryKey: qk.progress(id),
     queryFn: () => apiGet<ProgressData>(`/api/batches/${id}/progress`),
-    refetchInterval: (q) => (q.state.data && !ACTIVE.has(q.state.data.status) && q.state.data.remaining === 0 ? false : 1500),
+    refetchInterval: (q) =>
+      q.state.data && !ACTIVE.has(q.state.data.status) && q.state.data.remaining === 0 ? false : 1500,
   });
 
   // Completion: toast + auto-navigate to Review after 3 s.
@@ -101,7 +102,8 @@ export default function ProcessingPage() {
     <div className="mx-auto max-w-7xl space-y-5 p-6">
       {ACTIVE.has(progress.status) && (
         <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-900">
-          <Info className="size-4 shrink-0" /> Processing continues on the server even if you close this tab. Come back any time.
+          <Info className="size-4 shrink-0" /> Processing continues on the server even if you close this tab. Come back
+          any time.
         </div>
       )}
 
@@ -113,7 +115,8 @@ export default function ProcessingPage() {
                 {progress.percent}%
               </p>
               <p className="text-sm text-muted-foreground">
-                {progress.finished} of {progress.total} images · {progress.status === "PAUSED" ? "paused" : progress.status.toLowerCase()}
+                {progress.finished} of {progress.total} images ·{" "}
+                {progress.status === "PAUSED" ? "paused" : progress.status.toLowerCase()}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -128,7 +131,12 @@ export default function ProcessingPage() {
                 </Button>
               )}
               {ACTIVE.has(progress.status) && (
-                <Button variant="outline" className="text-destructive" onClick={() => setConfirmCancel(true)} disabled={!!busy}>
+                <Button
+                  variant="outline"
+                  className="text-destructive"
+                  onClick={() => setConfirmCancel(true)}
+                  disabled={!!busy}
+                >
                   <Square /> Cancel
                 </Button>
               )}
@@ -161,14 +169,26 @@ export default function ProcessingPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8" data-testid="processing-grid">
+      <div
+        className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8"
+        data-testid="processing-grid"
+      >
         {progress.images.map((img) => {
           const working = img.status === "PROCESSING_AI" || img.status === "PROCESSING_STANDARD";
           return (
-            <div key={img.id} className={cn("overflow-hidden rounded-lg border bg-card", img.status === "FAILED" && "border-red-300")} title={img.errorMessage ?? img.filename}>
+            <div
+              key={img.id}
+              className={cn("overflow-hidden rounded-lg border bg-card", img.status === "FAILED" && "border-red-300")}
+              title={img.errorMessage ?? img.filename}
+            >
               <div className="checkerboard relative aspect-square">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img.thumbUrl ?? ""} alt={img.filename} className={cn("size-full object-contain", img.status === "QUEUED" && "opacity-50")} loading="lazy" />
+                <img
+                  src={img.thumbUrl ?? ""}
+                  alt={img.filename}
+                  className={cn("size-full object-contain", img.status === "QUEUED" && "opacity-50")}
+                  loading="lazy"
+                />
                 {working && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white/40">
                     <Loader2 className="size-6 animate-spin text-blue-600" />
@@ -178,7 +198,9 @@ export default function ProcessingPage() {
               <div className="space-y-1 p-1.5">
                 <ImageStatusBadge status={img.status} needsReview={img.needsReview} />
                 {img.retrying && <p className="text-[10px] text-amber-700">retrying…</p>}
-                {img.status === "FAILED" && <p className="line-clamp-2 text-[10px] text-destructive">{img.errorMessage}</p>}
+                {img.status === "FAILED" && (
+                  <p className="line-clamp-2 text-[10px] text-destructive">{img.errorMessage}</p>
+                )}
               </div>
             </div>
           );

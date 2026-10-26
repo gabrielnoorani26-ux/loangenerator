@@ -21,7 +21,15 @@ export async function getProgress(batchId: string, now = new Date()) {
       qcVerdict: true,
     },
   });
-  const counts: Record<string, number> = { QUEUED: 0, PROCESSING_AI: 0, PROCESSING_STANDARD: 0, DONE: 0, FAILED: 0, APPROVED: 0, REJECTED: 0 };
+  const counts: Record<string, number> = {
+    QUEUED: 0,
+    PROCESSING_AI: 0,
+    PROCESSING_STANDARD: 0,
+    DONE: 0,
+    FAILED: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+  };
   for (const i of images) counts[i.status] = (counts[i.status] ?? 0) + 1;
   const finished = counts.DONE + counts.APPROVED + counts.REJECTED + counts.FAILED;
   const remaining = counts.QUEUED + counts.PROCESSING_AI + counts.PROCESSING_STANDARD;
@@ -29,7 +37,8 @@ export async function getProgress(batchId: string, now = new Date()) {
   const elapsedSeconds = batch.startedAt ? Math.max(0, (end.getTime() - batch.startedAt.getTime()) / 1000) : 0;
   // Throughput-based average (already reflects concurrency).
   const avgSecondsPerImage = finished > 0 && elapsedSeconds > 0 ? elapsedSeconds / finished : null;
-  const etaSeconds = avgSecondsPerImage != null && remaining > 0 ? avgSecondsPerImage * remaining : remaining === 0 ? 0 : null;
+  const etaSeconds =
+    avgSecondsPerImage != null && remaining > 0 ? avgSecondsPerImage * remaining : remaining === 0 ? 0 : null;
   return {
     batchId,
     status: batch.status,

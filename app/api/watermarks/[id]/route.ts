@@ -14,6 +14,8 @@ export const DELETE = route(async (_req, ctx: RouteContext<"/api/watermarks/[id]
     where: { id: "singleton" },
     data: { watermarkLibrary: JSON.stringify(lib.filter((w) => w.id !== id)) },
   });
-  await storage().delete(entry.key).catch(() => undefined);
+  await storage()
+    .delete(entry.key)
+    .catch(() => undefined);
   return ok({ settings: serializeAppSettings(updated) });
 });

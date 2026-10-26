@@ -37,7 +37,8 @@ export const PATCH = route(async (req, ctx: Ctx) => {
     include: { preset: { select: { name: true } } },
   });
   if (body.name && body.name !== existing.name) await logActivity("batch.renamed", `Renamed to “${body.name}”`, id);
-  if (body.status === "COMPLETE" && existing.status !== "COMPLETE") await logActivity("batch.completed", "Marked complete", id);
+  if (body.status === "COMPLETE" && existing.status !== "COMPLETE")
+    await logActivity("batch.completed", "Marked complete", id);
   return ok({ batch: serializeBatch(batch) });
 });
 

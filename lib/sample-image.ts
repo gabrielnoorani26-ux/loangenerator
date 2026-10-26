@@ -24,7 +24,9 @@ export const SAMPLE_KEY = "samples/sample-shoe.png";
 export async function getSampleImage(): Promise<Buffer> {
   const store = storage();
   if (await store.exists(SAMPLE_KEY)) return store.get(SAMPLE_KEY);
-  const buf = await sharp(Buffer.from(shoeSvg(1800, 1200, "#8b5a2b", "#e6e6e6"))).png().toBuffer();
+  const buf = await sharp(Buffer.from(shoeSvg(1800, 1200, "#8b5a2b", "#e6e6e6")))
+    .png()
+    .toBuffer();
   await store.put(SAMPLE_KEY, buf);
   return buf;
 }

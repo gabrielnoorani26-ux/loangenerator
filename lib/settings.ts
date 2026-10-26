@@ -56,9 +56,7 @@ export const AiSettingsSchema = z
         // A single mode enum makes "solid color" and "custom scene" mutually exclusive.
         mode: z.enum(["none", "solid", "scene"]).default("none"),
         color: hexColor.default("#FFFFFF"),
-        scenePreset: z
-          .enum(Object.keys(SCENE_PRESETS) as [ScenePreset, ...ScenePreset[]])
-          .default("studio_gray"),
+        scenePreset: z.enum(Object.keys(SCENE_PRESETS) as [ScenePreset, ...ScenePreset[]]).default("studio_gray"),
         customScene: z.string().max(500).default(""),
       })
       .prefault({}),

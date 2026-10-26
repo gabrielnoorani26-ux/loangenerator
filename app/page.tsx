@@ -4,7 +4,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Activity, CheckCircle2, Copy, Images, LayoutGrid, List, MoreHorizontal, Pencil, Search, Sparkles, Trash2, FolderOpen, PackageOpen } from "lucide-react";
+import {
+  Activity,
+  CheckCircle2,
+  Copy,
+  Images,
+  LayoutGrid,
+  List,
+  MoreHorizontal,
+  Pencil,
+  Search,
+  Sparkles,
+  Trash2,
+  FolderOpen,
+  PackageOpen,
+} from "lucide-react";
 import { apiGet, apiSend, errorMessage } from "@/lib/client/api";
 import { useAppSettings } from "@/lib/client/hooks";
 import { batchHrefFor } from "@/lib/client/routes";
@@ -18,7 +32,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -65,13 +85,23 @@ export default function DashboardPage() {
         <StatCard icon={Images} label="Images processed this week" value={stats?.imagesProcessedThisWeek} />
         <StatCard icon={Activity} label="Active batches" value={stats?.activeBatches} />
         <StatCard icon={Sparkles} label="AI calls this month" value={stats?.aiCallsThisMonth} />
-        <StatCard icon={CheckCircle2} label="Avg approval rate" value={stats ? (stats.avgApprovalRate == null ? "—" : `${stats.avgApprovalRate}%`) : undefined} />
+        <StatCard
+          icon={CheckCircle2}
+          label="Avg approval rate"
+          value={stats ? (stats.avgApprovalRate == null ? "—" : `${stats.avgApprovalRate}%`) : undefined}
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-56 flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-8" placeholder="Search batches…" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search batches" />
+          <Input
+            className="pl-8"
+            placeholder="Search batches…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search batches"
+          />
         </div>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-36" aria-label="Status filter">
@@ -110,7 +140,12 @@ export default function DashboardPage() {
             <SelectItem value="images">Most images</SelectItem>
           </SelectContent>
         </Select>
-        <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as "cards" | "table")} className="hidden md:inline-flex">
+        <ToggleGroup
+          type="single"
+          value={view}
+          onValueChange={(v) => v && setView(v as "cards" | "table")}
+          className="hidden md:inline-flex"
+        >
           <ToggleGroupItem value="cards" aria-label="Card view">
             <LayoutGrid />
           </ToggleGroupItem>
@@ -128,13 +163,19 @@ export default function DashboardPage() {
         </div>
       ) : !batches?.length ? (
         filtered ? (
-          <div className="rounded-lg border bg-card py-16 text-center text-muted-foreground">No batches match these filters.</div>
+          <div className="rounded-lg border bg-card py-16 text-center text-muted-foreground">
+            No batches match these filters.
+          </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed bg-card py-20 text-center" data-testid="empty-state">
+          <div
+            className="flex flex-col items-center gap-3 rounded-lg border border-dashed bg-card py-20 text-center"
+            data-testid="empty-state"
+          >
             <PackageOpen className="size-12 text-primary" />
             <h2 className="text-lg font-semibold">No batches yet</h2>
             <p className="max-w-md text-sm text-muted-foreground">
-              Create a batch, drop in 100–200 product photos, pick a preset, and BatchLens edits them all. Originals are never modified.
+              Create a batch, drop in 100–200 product photos, pick a preset, and BatchLens edits them all. Originals are
+              never modified.
             </p>
             <NewBatchButton size="lg" label="Create your first batch" />
           </div>
@@ -152,7 +193,15 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: React.ReactNode | undefined }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: React.ReactNode | undefined;
+}) {
   return (
     <Card>
       <CardContent className="flex items-center gap-3 pt-5">
@@ -161,7 +210,11 @@ function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ cl
         </span>
         <div className="min-w-0">
           <p className="truncate text-xs text-muted-foreground">{label}</p>
-          {value === undefined ? <Skeleton className="mt-1 h-6 w-12" /> : <p className="text-xl font-semibold tabular-nums">{value}</p>}
+          {value === undefined ? (
+            <Skeleton className="mt-1 h-6 w-12" />
+          ) : (
+            <p className="text-xl font-semibold tabular-nums">{value}</p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -181,7 +234,13 @@ function BatchCard({ batch }: { batch: BatchDTO }) {
           {Array.from({ length: 4 }).map((_, i) =>
             batch.thumbnails[i] ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={batch.thumbnails[i]!} alt="" className="checkerboard size-full object-contain" loading="lazy" />
+              <img
+                key={i}
+                src={batch.thumbnails[i]!}
+                alt=""
+                className="checkerboard size-full object-contain"
+                loading="lazy"
+              />
             ) : (
               <div key={i} className="bg-muted" />
             ),
@@ -207,7 +266,8 @@ function BatchCard({ batch }: { batch: BatchDTO }) {
           <Progress value={progressOf(batch)} />
           <p className="flex justify-between text-xs text-muted-foreground">
             <span>
-              {batch.approvedCount} approved · {batch.completedCount} done{batch.failedCount ? ` · ${batch.failedCount} failed` : ""}
+              {batch.approvedCount} approved · {batch.completedCount} done
+              {batch.failedCount ? ` · ${batch.failedCount} failed` : ""}
             </span>
             <span>{batch.aiCallsUsed} AI calls</span>
           </p>
@@ -317,7 +377,11 @@ function BatchMenu({ batch }: { batch: BatchDTO }) {
             <Pencil /> Rename
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)} disabled={batch.status === "PROCESSING"}>
+          <DropdownMenuItem
+            variant="destructive"
+            onSelect={() => setDeleteOpen(true)}
+            disabled={batch.status === "PROCESSING"}
+          >
             <Trash2 /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -327,7 +391,12 @@ function BatchMenu({ batch }: { batch: BatchDTO }) {
           <DialogHeader>
             <DialogTitle>Rename batch</DialogTitle>
           </DialogHeader>
-          <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && name.trim() && rename()} autoFocus />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && name.trim() && rename()}
+            autoFocus
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenameOpen(false)}>
               Cancel

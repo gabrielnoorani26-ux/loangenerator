@@ -7,7 +7,7 @@
  * Every step materializes to a raw RGBA buffer so the order above is exactly
  * the order applied (a single sharp pipeline reorders some operations).
  */
-import sharp, { type Metadata, type Sharp } from "sharp";
+import sharp, { type Sharp } from "sharp";
 import type { AspectRatio, OutputSettings, StandardSettings, WatermarkPosition } from "./settings";
 
 export interface RawImage {
@@ -64,7 +64,10 @@ export async function decode(input: Buffer, maxLongestSide?: number): Promise<Ra
  * transparent pixels always count as background. A small 1px margin of
  * anti-aliasing is kept. If nothing differs, the image is returned unchanged.
  */
-export function trimBox(img: RawImage, threshold: number): { left: number; top: number; width: number; height: number } | null {
+export function trimBox(
+  img: RawImage,
+  threshold: number,
+): { left: number; top: number; width: number; height: number } | null {
   const { data, width, height } = img;
   const t = Math.max(1, threshold);
   const r0 = data[0];
@@ -159,9 +162,9 @@ export async function fitToCanvas(img: RawImage, fit: StandardSettings["fit"]): 
   const left = Math.round((fit.width - scaled.info.width) / 2);
   const top = Math.round((fit.height - scaled.info.height) / 2);
   return toRaw(
-    sharp({ create: { width: fit.width, height: fit.height, channels: 4, background: { r, g, b, alpha: 1 } } }).composite([
-      { input: scaled.data, left, top },
-    ]),
+    sharp({
+      create: { width: fit.width, height: fit.height, channels: 4, background: { r, g, b, alpha: 1 } },
+    }).composite([{ input: scaled.data, left, top }]),
   );
 }
 
@@ -277,7 +280,9 @@ function escapeXml(s: string): string {
 async function scaleAlpha(png: Buffer, opacity: number): Promise<Buffer> {
   const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * opacity);
-  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .png()
+    .toBuffer();
 }
 
 export async function applyWatermark(
@@ -292,7 +297,10 @@ export async function applyWatermark(
 
   if (wm.type === "logo") {
     if (!assets.logo) return img;
-    const resized = await sharp(assets.logo).resize({ width: targetW, height: img.height, fit: "inside" }).png().toBuffer();
+    const resized = await sharp(assets.logo)
+      .resize({ width: targetW, height: img.height, fit: "inside" })
+      .png()
+      .toBuffer();
     overlay = await scaleAlpha(resized, opacity);
   } else {
     const text = wm.text.trim();
@@ -311,7 +319,8 @@ export async function applyWatermark(
   const ow = Math.min(meta.width ?? 0, img.width);
   const oh = Math.min(meta.height ?? 0, img.height);
   if (!ow || !oh) return img;
-  if (ow !== meta.width || oh !== meta.height) overlay = await sharp(overlay).resize(ow, oh, { fit: "inside" }).png().toBuffer();
+  if (ow !== meta.width || oh !== meta.height)
+    overlay = await sharp(overlay).resize(ow, oh, { fit: "inside" }).png().toBuffer();
   const margin = Math.round((Math.min(img.width, img.height) * wm.marginPct) / 100);
   const { left, top } = watermarkPosition(wm.position, img.width, img.height, ow, oh, margin);
   return toRaw(fromRaw(img).composite([{ input: overlay, left, top }]));
@@ -354,11 +363,17 @@ async function encode(
   if (out.format === "jpg") {
     // JPG has no alpha: flatten transparency onto the configured color.
     const { r, g, b } = hexToRgb(out.flattenColor);
-    s = s.flatten({ background: { r, g, b } }).jpeg({ quality, mozjpeg: !fast, chromaSubsampling: quality >= 90 ? "4:4:4" : "4:2:0" });
+    s = s
+      .flatten({ background: { r, g, b } })
+      .jpeg({ quality, mozjpeg: !fast, chromaSubsampling: quality >= 90 ? "4:4:4" : "4:2:0" });
   } else if (out.format === "webp") {
     s = s.webp({ quality, alphaQuality: 100, effort: 4 });
   } else {
-    s = s.png(palette ? { palette: true, quality, compressionLevel: 9, effort: 7 } : { compressionLevel: 9, adaptiveFiltering: true });
+    s = s.png(
+      palette
+        ? { palette: true, quality, compressionLevel: 9, effort: 7 }
+        : { compressionLevel: 9, adaptiveFiltering: true },
+    );
   }
   // sharp strips all metadata by default. When the user turns stripping off we
   // keep an sRGB profile plus descriptive EXIF fields from the source.
@@ -376,7 +391,12 @@ async function encode(
  * quality down by 5 (floor 50) until the file fits. PNG has no quality knob,
  * so it steps through palette quantization instead.
  */
-export async function exportImage(img: RawImage, out: OutputSettings, meta: SourceMetadata = {}, fast = false): Promise<StandardEditResult> {
+export async function exportImage(
+  img: RawImage,
+  out: OutputSettings,
+  meta: SourceMetadata = {},
+  fast = false,
+): Promise<StandardEditResult> {
   let quality = out.quality;
   let data = await encode(img, out, quality, meta, false, fast);
   const limit = out.maxKb ? out.maxKb * 1024 : null;
@@ -442,7 +462,10 @@ export const EXT_FOR_FORMAT: Record<OutputSettings["format"], string> = { jpg: "
  * preview looks identical to the full-size output, just smaller.
  * Returns the scaled settings and the factor used (1 = unchanged).
  */
-export function scaleStandardForPreview(standard: StandardSettings, maxSide: number): { standard: StandardSettings; scale: number } {
+export function scaleStandardForPreview(
+  standard: StandardSettings,
+  maxSide: number,
+): { standard: StandardSettings; scale: number } {
   const targets: number[] = [];
   if (standard.fit.enabled) targets.push(standard.fit.width, standard.fit.height);
   if (standard.resize.enabled) {

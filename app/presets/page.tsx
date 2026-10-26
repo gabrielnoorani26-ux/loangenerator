@@ -14,7 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,7 +28,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 
 const CATEGORIES = ["ECOMMERCE", "WHOLESALE", "SOCIAL", "WEB", "CUSTOM"] as const;
-const CATEGORY_LABEL: Record<string, string> = { ECOMMERCE: "E-commerce", WHOLESALE: "Wholesale", SOCIAL: "Social", WEB: "Web", CUSTOM: "Custom" };
+const CATEGORY_LABEL: Record<string, string> = {
+  ECOMMERCE: "E-commerce",
+  WHOLESALE: "Wholesale",
+  SOCIAL: "Social",
+  WEB: "Web",
+  CUSTOM: "Custom",
+};
 
 export default function PresetsPage() {
   const { data: presets, isLoading } = usePresets();
@@ -33,7 +45,9 @@ export default function PresetsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Presets</h1>
-          <p className="text-sm text-muted-foreground">Reusable edit settings. The starred preset is used for new batches.</p>
+          <p className="text-sm text-muted-foreground">
+            Reusable edit settings. The starred preset is used for new batches.
+          </p>
         </div>
         <Button onClick={() => setEditing("new")}>
           <Plus /> New preset
@@ -47,12 +61,20 @@ export default function PresetsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {presets?.map((p) => <PresetCard key={p.id} preset={p} onEdit={() => setEditing(p)} />)}
+          {presets?.map((p) => (
+            <PresetCard key={p.id} preset={p} onEdit={() => setEditing(p)} />
+          ))}
         </div>
       )}
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="h-[92vh] w-[96vw] max-w-6xl grid-rows-[auto_1fr_auto] p-5">
-          {editing && <PresetEditor key={editing === "new" ? "new" : editing.id} preset={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
+          {editing && (
+            <PresetEditor
+              key={editing === "new" ? "new" : editing.id}
+              preset={editing === "new" ? null : editing}
+              onDone={() => setEditing(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
@@ -74,7 +96,11 @@ function PresetCard({ preset, onEdit }: { preset: PresetDTO; onEdit: () => void 
   };
   return (
     <Card className="overflow-hidden" data-testid="preset-card">
-      <button onClick={onEdit} className="checkerboard block h-40 w-full cursor-pointer border-b" aria-label={`Edit ${preset.name}`}>
+      <button
+        onClick={onEdit}
+        className="checkerboard block h-40 w-full cursor-pointer border-b"
+        aria-label={`Edit ${preset.name}`}
+      >
         {preset.exampleUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preset.exampleUrl} alt="" className="size-full object-contain" loading="lazy" />
@@ -86,7 +112,9 @@ function PresetCard({ preset, onEdit }: { preset: PresetDTO; onEdit: () => void 
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="flex items-center gap-1.5 truncate font-semibold" data-testid="preset-name">
-              {preset.isDefault && <Star className="size-4 shrink-0 fill-amber-400 text-amber-400" aria-label="Default preset" />}
+              {preset.isDefault && (
+                <Star className="size-4 shrink-0 fill-amber-400 text-amber-400" aria-label="Default preset" />
+              )}
               {preset.name}
             </h3>
             <div className="mt-1 flex gap-1.5">
@@ -104,10 +132,17 @@ function PresetCard({ preset, onEdit }: { preset: PresetDTO; onEdit: () => void 
               <DropdownMenuItem onSelect={onEdit}>
                 <Pencil /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => act(() => apiSend(`/api/presets/${preset.id}/duplicate`, "POST"), "Preset duplicated")}>
+              <DropdownMenuItem
+                onSelect={() => act(() => apiSend(`/api/presets/${preset.id}/duplicate`, "POST"), "Preset duplicated")}
+              >
                 <Copy /> Duplicate
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={preset.isDefault} onSelect={() => act(() => apiSend(`/api/presets/${preset.id}/default`, "POST"), `“${preset.name}” is now the default`)}>
+              <DropdownMenuItem
+                disabled={preset.isDefault}
+                onSelect={() =>
+                  act(() => apiSend(`/api/presets/${preset.id}/default`, "POST"), `“${preset.name}” is now the default`)
+                }
+              >
                 <Star /> Set as default
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -205,8 +240,18 @@ function PresetEditor({ preset, onDone }: { preset: PresetDTO | null; onDone: ()
               </Select>
             </div>
           </div>
-          <Textarea placeholder="Description (optional)" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
-          <SettingsPanel value={settings} onChange={setSettings} watermarks={app?.watermarkLibrary ?? []} defaultOpen={["ai", "standard", "output"]} />
+          <Textarea
+            placeholder="Description (optional)"
+            rows={2}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <SettingsPanel
+            value={settings}
+            onChange={setSettings}
+            watermarks={app?.watermarkLibrary ?? []}
+            defaultOpen={["ai", "standard", "output"]}
+          />
         </div>
         <div className="min-h-0">
           <div className="checkerboard relative aspect-square max-h-full overflow-hidden rounded-lg border">
@@ -216,9 +261,13 @@ function PresetEditor({ preset, onDone }: { preset: PresetDTO | null; onDone: ()
             ) : (
               <Skeleton className="size-full" />
             )}
-            {preview.isFetching && <Loader2 className="absolute top-3 right-3 size-5 animate-spin text-muted-foreground" />}
+            {preview.isFetching && (
+              <Loader2 className="absolute top-3 right-3 size-5 animate-spin text-muted-foreground" />
+            )}
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Sample image · standard edits only (AI edits are applied when a batch runs).</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Sample image · standard edits only (AI edits are applied when a batch runs).
+          </p>
         </div>
       </div>
       <DialogFooter>

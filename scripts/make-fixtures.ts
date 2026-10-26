@@ -10,7 +10,12 @@ import { shoeSvg } from "../lib/sample-image";
 
 async function make(file: string, w: number, h: number, color: string, bg: string | null, fmt: "jpg" | "png" | "webp") {
   let img = sharp(Buffer.from(shoeSvg(w, h, color, bg)));
-  img = fmt === "jpg" ? img.flatten({ background: "#ffffff" }).jpeg({ quality: 92 }) : fmt === "png" ? img.png() : img.webp({ quality: 90 });
+  img =
+    fmt === "jpg"
+      ? img.flatten({ background: "#ffffff" }).jpeg({ quality: 92 })
+      : fmt === "png"
+        ? img.png()
+        : img.webp({ quality: 90 });
   await img.toFile(file);
   console.log("wrote", file);
 }

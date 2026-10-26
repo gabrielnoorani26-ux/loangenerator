@@ -74,7 +74,9 @@ export function SettingsPanel({
           <Field label="Background">
             <RadioGroup
               value={s.ai.background.mode}
-              onValueChange={(v) => update((d) => void (d.ai.background.mode = v as EditSettings["ai"]["background"]["mode"]))}
+              onValueChange={(v) =>
+                update((d) => void (d.ai.background.mode = v as EditSettings["ai"]["background"]["mode"]))
+              }
               className="grid-cols-3"
             >
               {[
@@ -88,7 +90,11 @@ export function SettingsPanel({
               ))}
             </RadioGroup>
             {s.ai.background.mode === "solid" && (
-              <ColorInput value={s.ai.background.color} onChange={(c) => update((d) => void (d.ai.background.color = c))} label="Background color" />
+              <ColorInput
+                value={s.ai.background.color}
+                onChange={(c) => update((d) => void (d.ai.background.color = c))}
+                label="Background color"
+              />
             )}
             {s.ai.background.mode === "scene" && (
               <div className="space-y-2">
@@ -120,7 +126,10 @@ export function SettingsPanel({
           </Field>
 
           <Field label="Shadow">
-            <Select value={s.ai.shadow} onValueChange={(v) => update((d) => void (d.ai.shadow = v as EditSettings["ai"]["shadow"]))}>
+            <Select
+              value={s.ai.shadow}
+              onValueChange={(v) => update((d) => void (d.ai.shadow = v as EditSettings["ai"]["shadow"]))}
+            >
               <SelectTrigger aria-label="Shadow">
                 <SelectValue />
               </SelectTrigger>
@@ -195,12 +204,23 @@ export function SettingsPanel({
             onChange={(v) => update((d) => void (d.standard.autoTrim.enabled = v))}
           />
           {s.standard.autoTrim.enabled && (
-            <SliderRow label="Trim threshold" min={0} max={100} value={s.standard.autoTrim.threshold} onChange={(v) => update((d) => void (d.standard.autoTrim.threshold = v))} />
+            <SliderRow
+              label="Trim threshold"
+              min={0}
+              max={100}
+              value={s.standard.autoTrim.threshold}
+              onChange={(v) => update((d) => void (d.standard.autoTrim.threshold = v))}
+            />
           )}
 
           <Field label="Crop to aspect ratio">
             <div className="grid grid-cols-2 gap-2">
-              <Select value={s.standard.crop.aspect} onValueChange={(v) => update((d) => void (d.standard.crop.aspect = v as EditSettings["standard"]["crop"]["aspect"]))}>
+              <Select
+                value={s.standard.crop.aspect}
+                onValueChange={(v) =>
+                  update((d) => void (d.standard.crop.aspect = v as EditSettings["standard"]["crop"]["aspect"]))
+                }
+              >
                 <SelectTrigger aria-label="Aspect ratio">
                   <SelectValue />
                 </SelectTrigger>
@@ -229,9 +249,21 @@ export function SettingsPanel({
             </div>
             {s.standard.crop.aspect === "custom" && (
               <div className="flex items-center gap-2">
-                <NumberInput aria-label="Custom ratio width" min={1} max={100} value={s.standard.crop.customWidth} onChange={(v) => update((d) => void (d.standard.crop.customWidth = v))} />
+                <NumberInput
+                  aria-label="Custom ratio width"
+                  min={1}
+                  max={100}
+                  value={s.standard.crop.customWidth}
+                  onChange={(v) => update((d) => void (d.standard.crop.customWidth = v))}
+                />
                 <span>:</span>
-                <NumberInput aria-label="Custom ratio height" min={1} max={100} value={s.standard.crop.customHeight} onChange={(v) => update((d) => void (d.standard.crop.customHeight = v))} />
+                <NumberInput
+                  aria-label="Custom ratio height"
+                  min={1}
+                  max={100}
+                  value={s.standard.crop.customHeight}
+                  onChange={(v) => update((d) => void (d.standard.crop.customHeight = v))}
+                />
               </div>
             )}
           </Field>
@@ -245,20 +277,52 @@ export function SettingsPanel({
           {s.standard.fit.enabled && (
             <div className="space-y-3 rounded-md bg-muted/60 p-3">
               <div className="flex items-center gap-2">
-                <NumberInput aria-label="Canvas width" min={16} max={8000} value={s.standard.fit.width} onChange={(v) => update((d) => void (d.standard.fit.width = v))} />
+                <NumberInput
+                  aria-label="Canvas width"
+                  min={16}
+                  max={8000}
+                  value={s.standard.fit.width}
+                  onChange={(v) => update((d) => void (d.standard.fit.width = v))}
+                />
                 <span>×</span>
-                <NumberInput aria-label="Canvas height" min={16} max={8000} value={s.standard.fit.height} onChange={(v) => update((d) => void (d.standard.fit.height = v))} />
+                <NumberInput
+                  aria-label="Canvas height"
+                  min={16}
+                  max={8000}
+                  value={s.standard.fit.height}
+                  onChange={(v) => update((d) => void (d.standard.fit.height = v))}
+                />
                 <span className="text-xs text-muted-foreground">px</span>
               </div>
-              <SliderRow label="Padding" suffix="%" min={0} max={40} value={s.standard.fit.paddingPct} onChange={(v) => update((d) => void (d.standard.fit.paddingPct = v))} />
-              <ColorInput label="Fill color" value={s.standard.fit.fillColor} onChange={(c) => update((d) => void (d.standard.fit.fillColor = c))} />
+              <SliderRow
+                label="Padding"
+                suffix="%"
+                min={0}
+                max={40}
+                value={s.standard.fit.paddingPct}
+                onChange={(v) => update((d) => void (d.standard.fit.paddingPct = v))}
+              />
+              <ColorInput
+                label="Fill color"
+                value={s.standard.fit.fillColor}
+                onChange={(c) => update((d) => void (d.standard.fit.fillColor = c))}
+              />
             </div>
           )}
 
-          <ToggleRow label="Resize" checked={s.standard.resize.enabled} onChange={(v) => update((d) => void (d.standard.resize.enabled = v))} />
+          <ToggleRow
+            label="Resize"
+            checked={s.standard.resize.enabled}
+            onChange={(v) => update((d) => void (d.standard.resize.enabled = v))}
+          />
           {s.standard.resize.enabled && (
             <div className="space-y-3 rounded-md bg-muted/60 p-3">
-              <Select value={s.standard.resize.mode} onValueChange={(v) => update((d) => void (d.standard.resize.mode = v as EditSettings["standard"]["resize"]["mode"]))}>
+              <Select
+                value={s.standard.resize.mode}
+                onValueChange={(v) =>
+                  update((d) => void (d.standard.resize.mode = v as EditSettings["standard"]["resize"]["mode"]))
+                }
+              >
                 <SelectTrigger aria-label="Resize mode">
                   <SelectValue />
                 </SelectTrigger>
@@ -272,9 +336,21 @@ export function SettingsPanel({
               {s.standard.resize.mode === "exact" ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <NumberInput aria-label="Resize width" min={16} max={8000} value={s.standard.resize.width} onChange={(v) => update((d) => void (d.standard.resize.width = v))} />
+                    <NumberInput
+                      aria-label="Resize width"
+                      min={16}
+                      max={8000}
+                      value={s.standard.resize.width}
+                      onChange={(v) => update((d) => void (d.standard.resize.width = v))}
+                    />
                     <span>×</span>
-                    <NumberInput aria-label="Resize height" min={16} max={8000} value={s.standard.resize.height} onChange={(v) => update((d) => void (d.standard.resize.height = v))} />
+                    <NumberInput
+                      aria-label="Resize height"
+                      min={16}
+                      max={8000}
+                      value={s.standard.resize.height}
+                      onChange={(v) => update((d) => void (d.standard.resize.height = v))}
+                    />
                   </div>
                   <ToggleRow
                     label="Lock aspect ratio"
@@ -292,7 +368,9 @@ export function SettingsPanel({
                     value={s.standard.resize.value}
                     onChange={(v) => update((d) => void (d.standard.resize.value = v))}
                   />
-                  <span className="text-xs text-muted-foreground">{s.standard.resize.mode === "percentage" ? "%" : "px"}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {s.standard.resize.mode === "percentage" ? "%" : "px"}
+                  </span>
                 </div>
               )}
             </div>
@@ -312,7 +390,11 @@ export function SettingsPanel({
             ))}
           </Field>
 
-          <ToggleRow label="Watermark" checked={s.standard.watermark.enabled} onChange={(v) => update((d) => void (d.standard.watermark.enabled = v))} />
+          <ToggleRow
+            label="Watermark"
+            checked={s.standard.watermark.enabled}
+            onChange={(v) => update((d) => void (d.standard.watermark.enabled = v))}
+          />
           {s.standard.watermark.enabled && (
             <div className="space-y-3 rounded-md bg-muted/60 p-3">
               <RadioGroup
@@ -328,9 +410,18 @@ export function SettingsPanel({
                 </label>
               </RadioGroup>
               {s.standard.watermark.type === "text" ? (
-                <Input aria-label="Watermark text" maxLength={100} placeholder="© Chelsea Crew" value={s.standard.watermark.text} onChange={(e) => update((d) => void (d.standard.watermark.text = e.target.value))} />
+                <Input
+                  aria-label="Watermark text"
+                  maxLength={100}
+                  placeholder="© Chelsea Crew"
+                  value={s.standard.watermark.text}
+                  onChange={(e) => update((d) => void (d.standard.watermark.text = e.target.value))}
+                />
               ) : watermarks.length ? (
-                <Select value={s.standard.watermark.logoKey ?? ""} onValueChange={(v) => update((d) => void (d.standard.watermark.logoKey = v))}>
+                <Select
+                  value={s.standard.watermark.logoKey ?? ""}
+                  onValueChange={(v) => update((d) => void (d.standard.watermark.logoKey = v))}
+                >
                   <SelectTrigger aria-label="Watermark logo">
                     <SelectValue placeholder="Choose a logo" />
                   </SelectTrigger>
@@ -345,10 +436,34 @@ export function SettingsPanel({
               ) : (
                 <p className="text-xs text-muted-foreground">Upload logos in Settings → Watermark library.</p>
               )}
-              <PositionPicker value={s.standard.watermark.position} onChange={(p) => update((d) => void (d.standard.watermark.position = p))} />
-              <SliderRow label="Size" suffix="% of width" min={1} max={100} value={s.standard.watermark.sizePct} onChange={(v) => update((d) => void (d.standard.watermark.sizePct = v))} />
-              <SliderRow label="Opacity" suffix="%" min={0} max={100} value={s.standard.watermark.opacity} onChange={(v) => update((d) => void (d.standard.watermark.opacity = v))} />
-              <SliderRow label="Margin" suffix="%" min={0} max={25} value={s.standard.watermark.marginPct} onChange={(v) => update((d) => void (d.standard.watermark.marginPct = v))} />
+              <PositionPicker
+                value={s.standard.watermark.position}
+                onChange={(p) => update((d) => void (d.standard.watermark.position = p))}
+              />
+              <SliderRow
+                label="Size"
+                suffix="% of width"
+                min={1}
+                max={100}
+                value={s.standard.watermark.sizePct}
+                onChange={(v) => update((d) => void (d.standard.watermark.sizePct = v))}
+              />
+              <SliderRow
+                label="Opacity"
+                suffix="%"
+                min={0}
+                max={100}
+                value={s.standard.watermark.opacity}
+                onChange={(v) => update((d) => void (d.standard.watermark.opacity = v))}
+              />
+              <SliderRow
+                label="Margin"
+                suffix="%"
+                min={0}
+                max={25}
+                value={s.standard.watermark.marginPct}
+                onChange={(v) => update((d) => void (d.standard.watermark.marginPct = v))}
+              />
             </div>
           )}
         </AccordionContent>
@@ -360,7 +475,10 @@ export function SettingsPanel({
         <AccordionContent className="space-y-5">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Format">
-              <Select value={s.output.format} onValueChange={(v) => update((d) => void (d.output.format = v as "jpg" | "png" | "webp"))}>
+              <Select
+                value={s.output.format}
+                onValueChange={(v) => update((d) => void (d.output.format = v as "jpg" | "png" | "webp"))}
+              >
                 <SelectTrigger aria-label="Output format">
                   <SelectValue />
                 </SelectTrigger>
@@ -378,33 +496,62 @@ export function SettingsPanel({
                 placeholder="No limit"
                 aria-label="Max file size KB"
                 value={s.output.maxKb ?? ""}
-                onChange={(e) => update((d) => void (d.output.maxKb = e.target.value ? Math.max(10, Number(e.target.value)) : null))}
+                onChange={(e) =>
+                  update((d) => void (d.output.maxKb = e.target.value ? Math.max(10, Number(e.target.value)) : null))
+                }
               />
             </Field>
           </div>
           {s.output.format !== "png" && (
-            <SliderRow label="Quality" min={50} max={100} value={s.output.quality} onChange={(v) => update((d) => void (d.output.quality = v))} />
+            <SliderRow
+              label="Quality"
+              min={50}
+              max={100}
+              value={s.output.quality}
+              onChange={(v) => update((d) => void (d.output.quality = v))}
+            />
           )}
           {s.output.format === "jpg" && (
-            <ColorInput label="Transparency fill (JPG)" value={s.output.flattenColor} onChange={(c) => update((d) => void (d.output.flattenColor = c))} />
+            <ColorInput
+              label="Transparency fill (JPG)"
+              value={s.output.flattenColor}
+              onChange={(c) => update((d) => void (d.output.flattenColor = c))}
+            />
           )}
-          <ToggleRow label="Strip metadata" hint="Removes EXIF/GPS/camera data" checked={s.output.stripMetadata} onChange={(v) => update((d) => void (d.output.stripMetadata = v))} />
+          <ToggleRow
+            label="Strip metadata"
+            hint="Removes EXIF/GPS/camera data"
+            checked={s.output.stripMetadata}
+            onChange={(v) => update((d) => void (d.output.stripMetadata = v))}
+          />
           <Field label="Naming pattern">
-            <Input aria-label="Naming pattern" value={s.output.namingPattern} onChange={(e) => update((d) => void (d.output.namingPattern = e.target.value || "{original}"))} />
+            <Input
+              aria-label="Naming pattern"
+              value={s.output.namingPattern}
+              onChange={(e) => update((d) => void (d.output.namingPattern = e.target.value || "{original}"))}
+            />
             <div className="flex flex-wrap gap-1">
               {NAMING_TOKENS.map((t) => (
                 <button
                   key={t}
                   type="button"
                   className="cursor-pointer rounded border bg-muted px-1.5 py-0.5 font-mono text-xs hover:bg-accent"
-                  onClick={() => update((d) => void (d.output.namingPattern = `${d.output.namingPattern}${d.output.namingPattern ? "_" : ""}{${t}}`))}
+                  onClick={() =>
+                    update(
+                      (d) =>
+                        void (d.output.namingPattern = `${d.output.namingPattern}${d.output.namingPattern ? "_" : ""}{${t}}`),
+                    )
+                  }
                 >
                   {`{${t}}`}
                 </button>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Example: <span className="font-mono text-foreground" data-testid="example-filename">{exampleFilename(s.output.namingPattern, s.output.format, batchName, brand)}</span>
+              Example:{" "}
+              <span className="font-mono text-foreground" data-testid="example-filename">
+                {exampleFilename(s.output.namingPattern, s.output.format, batchName, brand)}
+              </span>
             </p>
           </Field>
         </AccordionContent>
@@ -424,7 +571,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ToggleRow({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <label className="flex cursor-pointer items-start justify-between gap-3">
       <span>
@@ -488,7 +645,16 @@ export function SliderRow({
   );
 }
 
-function NumberInput({ value, onChange, min, max, ...rest }: { value: number; onChange: (v: number) => void; min: number; max: number } & Omit<React.ComponentProps<"input">, "onChange" | "value">) {
+function NumberInput({
+  value,
+  onChange,
+  min,
+  max,
+  ...rest
+}: { value: number; onChange: (v: number) => void; min: number; max: number } & Omit<
+  React.ComponentProps<"input">,
+  "onChange" | "value"
+>) {
   return (
     <Input
       type="number"
@@ -505,7 +671,15 @@ function NumberInput({ value, onChange, min, max, ...rest }: { value: number; on
   );
 }
 
-export function ColorInput({ value, onChange, label }: { value: string; onChange: (c: string) => void; label: string }) {
+export function ColorInput({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (c: string) => void;
+  label: string;
+}) {
   return (
     <div className="flex items-center gap-2">
       <input
@@ -530,7 +704,13 @@ export function ColorInput({ value, onChange, label }: { value: string; onChange
   );
 }
 
-function PositionPicker({ value, onChange }: { value: string; onChange: (p: (typeof WATERMARK_POSITIONS)[number]) => void }) {
+function PositionPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (p: (typeof WATERMARK_POSITIONS)[number]) => void;
+}) {
   return (
     <div className="flex items-center gap-3">
       <div className="grid w-20 grid-cols-3 gap-1">
@@ -541,7 +721,10 @@ function PositionPicker({ value, onChange }: { value: string; onChange: (p: (typ
             title={p}
             aria-label={`Position ${p}`}
             onClick={() => onChange(p)}
-            className={cn("aspect-square cursor-pointer rounded-sm border", value === p ? "border-primary bg-primary" : "bg-card hover:bg-accent")}
+            className={cn(
+              "aspect-square cursor-pointer rounded-sm border",
+              value === p ? "border-primary bg-primary" : "bg-card hover:bg-accent",
+            )}
           />
         ))}
       </div>

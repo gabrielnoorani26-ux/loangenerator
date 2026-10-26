@@ -69,7 +69,9 @@ export function buildChangeLines(ai: AiSettings, perImageInstruction?: string | 
   }
 
   if (ai.straighten) {
-    lines.push("Center the product in the frame and level it so it sits straight, without changing its angle or proportions.");
+    lines.push(
+      "Center the product in the frame and level it so it sits straight, without changing its angle or proportions.",
+    );
   }
   const custom = ai.customInstruction.trim().slice(0, 500);
   if (custom) lines.push(ensurePeriod(custom));

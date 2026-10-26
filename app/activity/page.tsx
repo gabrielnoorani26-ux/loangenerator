@@ -72,7 +72,13 @@ export default function ActivityPage() {
         </div>
         <div className="space-y-1">
           <Label htmlFor="from">From</Label>
-          <Input id="from" type="date" value={from} onChange={(e) => reset(() => setFrom(e.target.value))} className="w-40" />
+          <Input
+            id="from"
+            type="date"
+            value={from}
+            onChange={(e) => reset(() => setFrom(e.target.value))}
+            className="w-40"
+          />
         </div>
         <div className="space-y-1">
           <Label htmlFor="to">To</Label>
@@ -115,7 +121,9 @@ export default function ActivityPage() {
             <TableBody>
               {data.rows.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</TableCell>
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                    {new Date(r.createdAt).toLocaleString()}
+                  </TableCell>
                   <TableCell>
                     {r.batch ? (
                       <Link className="text-primary hover:underline" href={`/batches/${r.batch.id}/review`}>
@@ -140,10 +148,22 @@ export default function ActivityPage() {
           <span className="text-muted-foreground">
             Page {data.page} of {data.pages} · {data.total} entries
           </span>
-          <Button size="icon-sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} aria-label="Previous page">
+          <Button
+            size="icon-sm"
+            variant="outline"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            aria-label="Previous page"
+          >
             <ChevronLeft />
           </Button>
-          <Button size="icon-sm" variant="outline" onClick={() => setPage((p) => Math.min(data.pages, p + 1))} disabled={page >= data.pages} aria-label="Next page">
+          <Button
+            size="icon-sm"
+            variant="outline"
+            onClick={() => setPage((p) => Math.min(data.pages, p + 1))}
+            disabled={page >= data.pages}
+            aria-label="Next page"
+          >
             <ChevronRight />
           </Button>
         </div>

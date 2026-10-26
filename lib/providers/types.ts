@@ -82,8 +82,10 @@ export function errorFromStatus(status: number, message = "", retryAfterHeader?:
   if (status === 413) return new ProviderError("too_large", message, undefined, status);
   if (status === 408 || status === 504) return new ProviderError("timeout", message, undefined, status);
   if (status >= 500) return new ProviderError("server", message, retryAfterMs, status);
-  if (/safety|content.?policy|moderation|not allowed|flagged/.test(msg)) return new ProviderError("content_policy", message, undefined, status);
-  if (/too large|file size|dimensions|exceeds/.test(msg)) return new ProviderError("too_large", message, undefined, status);
+  if (/safety|content.?policy|moderation|not allowed|flagged/.test(msg))
+    return new ProviderError("content_policy", message, undefined, status);
+  if (/too large|file size|dimensions|exceeds/.test(msg))
+    return new ProviderError("too_large", message, undefined, status);
   if (status >= 400) return new ProviderError("bad_request", message, undefined, status);
   return new ProviderError("unknown", message, undefined, status);
 }
@@ -101,7 +103,8 @@ export function toProviderError(err: unknown): ProviderError {
   if (err instanceof ProviderError) return err;
   if (err instanceof Error) {
     if (err.name === "AbortError" || /timed? ?out/i.test(err.message)) return new ProviderError("timeout", err.message);
-    if (/ECONNRESET|ENOTFOUND|ECONNREFUSED|fetch failed|socket/i.test(err.message)) return new ProviderError("network", err.message);
+    if (/ECONNRESET|ENOTFOUND|ECONNREFUSED|fetch failed|socket/i.test(err.message))
+      return new ProviderError("network", err.message);
     return new ProviderError("unknown", err.message);
   }
   return new ProviderError("unknown", String(err));

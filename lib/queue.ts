@@ -49,7 +49,10 @@ export async function startBatch(batchId: string) {
         finishedAt: null,
       },
     });
-    if (batch.presetId) await tx.preset.update({ where: { id: batch.presetId }, data: { usageCount: { increment: 1 } } }).catch(() => undefined);
+    if (batch.presetId)
+      await tx.preset
+        .update({ where: { id: batch.presetId }, data: { usageCount: { increment: 1 } } })
+        .catch(() => undefined);
     await recountBatch(batchId, tx);
   });
   await logActivity(
@@ -89,7 +92,10 @@ export async function maybeFinishBatch(batchId: string, tx: Tx | typeof prisma =
   if (batch?.status !== "PROCESSING") return false;
   const remaining = await tx.batchImage.count({ where: { batchId, status: { in: ["QUEUED", ...IN_FLIGHT] } } });
   if (remaining > 0) return false;
-  const r = await tx.batch.updateMany({ where: { id: batchId, status: "PROCESSING" }, data: { status: "REVIEW", finishedAt: new Date() } });
+  const r = await tx.batch.updateMany({
+    where: { id: batchId, status: "PROCESSING" },
+    data: { status: "REVIEW", finishedAt: new Date() },
+  });
   if (r.count > 0) {
     const b = await tx.batch.findUnique({ where: { id: batchId } });
     await logActivity(
@@ -185,7 +191,10 @@ export async function claimJobs(limit: number, now = new Date()): Promise<Claime
 /** Refresh the lock so long AI calls aren't mistaken for stuck jobs. Returns the new token or null if lost. */
 export async function heartbeat(job: ClaimedJob): Promise<Date | null> {
   const next = new Date();
-  const r = await prisma.batchImage.updateMany({ where: { id: job.image.id, lockedAt: job.lockedAt }, data: { lockedAt: next } });
+  const r = await prisma.batchImage.updateMany({
+    where: { id: job.image.id, lockedAt: job.lockedAt },
+    data: { lockedAt: next },
+  });
   if (r.count === 1) {
     job.lockedAt = next;
     return next;
@@ -206,9 +215,14 @@ export async function setPhase(job: ClaimedJob, phase: "AI" | "STANDARD") {
 /** Record a fresh AI result immediately (cache + billing), independent of the rest of the job. */
 export async function recordAiResult(job: ClaimedJob, r: { key: string; hash: string; route: "edit" | "white-bg" }) {
   await prisma.$transaction(async (tx) => {
-    await tx.batchImage.update({ where: { id: job.image.id }, data: { aiIntermediateKey: r.key, aiSettingsHash: r.hash } });
+    await tx.batchImage.update({
+      where: { id: job.image.id },
+      data: { aiIntermediateKey: r.key, aiSettingsHash: r.hash },
+    });
     await tx.batch.update({ where: { id: job.image.batchId }, data: { aiCallsUsed: { increment: 1 } } });
-    await tx.usageEvent.create({ data: { batchId: job.image.batchId, kind: r.route === "white-bg" ? "bg_removal" : "ai_edit" } });
+    await tx.usageEvent.create({
+      data: { batchId: job.image.batchId, kind: r.route === "white-bg" ? "bg_removal" : "ai_edit" },
+    });
   });
 }
 
@@ -292,8 +306,20 @@ export async function failJob(job: ClaimedJob, err: unknown, maxRetries: number)
     await tx.batchImage.update({
       where: { id: img.id },
       data: retry
-        ? { status: "QUEUED", lockedAt: null, retryCount: nextRetry, availableAt: new Date(Date.now() + delayMs), errorMessage: perr.userMessage }
-        : { status: "FAILED", lockedAt: null, retryCount: nextRetry, availableAt: null, errorMessage: humanError(err, perr) },
+        ? {
+            status: "QUEUED",
+            lockedAt: null,
+            retryCount: nextRetry,
+            availableAt: new Date(Date.now() + delayMs),
+            errorMessage: perr.userMessage,
+          }
+        : {
+            status: "FAILED",
+            lockedAt: null,
+            retryCount: nextRetry,
+            availableAt: null,
+            errorMessage: humanError(err, perr),
+          },
     });
     await recountBatch(img.batchId, tx);
   });

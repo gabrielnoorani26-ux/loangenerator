@@ -24,15 +24,21 @@ async function check(name: string, configured: boolean, fn: () => Promise<void>)
 export const POST = route(async () => {
   const results: Check[] = [];
   results.push(
-    await check(`Image editing (${env.imageProvider}${env.imageProviderModel && env.imageProvider !== "mock" ? ` · ${env.imageProviderModel}` : ""})`, env.imageProvider === "mock" || !!env.imageProviderApiKey, () =>
-      getImageEditProvider().testConnection(),
+    await check(
+      `Image editing (${env.imageProvider}${env.imageProviderModel && env.imageProvider !== "mock" ? ` · ${env.imageProviderModel}` : ""})`,
+      env.imageProvider === "mock" || !!env.imageProviderApiKey,
+      () => getImageEditProvider().testConnection(),
     ),
   );
   const bg = getBackgroundRemovalProvider();
-  results.push(await check(`Background removal (${env.bgRemovalProvider || "none"})`, !!bg, () => bg!.testConnection()));
+  results.push(
+    await check(`Background removal (${env.bgRemovalProvider || "none"})`, !!bg, () => bg!.testConnection()),
+  );
   const qc = getQcProvider();
   results.push(
-    await check(`Vision QC (${qc?.name === "anthropic" ? env.anthropicQcModel : qc?.name ?? "none"})`, !!qc, () => qc!.testConnection()),
+    await check(`Vision QC (${qc?.name === "anthropic" ? env.anthropicQcModel : (qc?.name ?? "none")})`, !!qc, () =>
+      qc!.testConnection(),
+    ),
   );
   return ok({ results });
 });

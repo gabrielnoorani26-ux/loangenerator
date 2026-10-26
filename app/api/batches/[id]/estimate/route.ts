@@ -9,13 +9,18 @@ type Ctx = RouteContext<"/api/batches/[id]/estimate">;
 async function estimateFor(batchId: string, settingsOverride?: unknown, ids?: string[], instruction?: string | null) {
   const batch = await prisma.batch.findUnique({ where: { id: batchId } });
   if (!batch) throw notFound("Batch");
-  const settings = settingsOverride ? EditSettingsSchema.parse(settingsOverride) : parseEditSettings(batch.settingsSnapshot ?? batch.settings);
+  const settings = settingsOverride
+    ? EditSettingsSchema.parse(settingsOverride)
+    : parseEditSettings(batch.settingsSnapshot ?? batch.settings);
   const images = await prisma.batchImage.findMany({
     where: { batchId, ...(ids ? { id: { in: ids } } : {}) },
     select: { useOriginal: true, perImageInstruction: true, aiSettingsHash: true, aiIntermediateKey: true },
   });
   // A re-run with an instruction replaces each image's per-image instruction.
-  const effective = instruction !== undefined ? images.map((i) => ({ ...i, perImageInstruction: instruction, useOriginal: false })) : images;
+  const effective =
+    instruction !== undefined
+      ? images.map((i) => ({ ...i, perImageInstruction: instruction, useOriginal: false }))
+      : images;
   return estimateRun(settings, effective);
 }
 

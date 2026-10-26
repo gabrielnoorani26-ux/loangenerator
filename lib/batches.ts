@@ -42,7 +42,9 @@ export function defaultBatchName(date = new Date()): string {
 export async function initialSettingsFor(presetId?: string | null) {
   const app = await getAppSettings();
   const id = presetId ?? app.defaultPresetId;
-  const preset = id ? await prisma.preset.findUnique({ where: { id } }) : await prisma.preset.findFirst({ where: { isDefault: true } });
+  const preset = id
+    ? await prisma.preset.findUnique({ where: { id } })
+    : await prisma.preset.findFirst({ where: { isDefault: true } });
   const settings = parseEditSettings(preset?.settings);
   if (!preset) settings.output.namingPattern = app.defaultNamingPattern;
   return { settings, presetId: preset?.id ?? null };

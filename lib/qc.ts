@@ -11,7 +11,11 @@ export const QC_INSTRUCTION =
   'Compare these two product photos. The first is the original, the second is the edited version. Check whether the product itself was altered in any way (shape, color, details, logos, hardware, stitching, missing or extra parts) and whether the requested edits were done cleanly (no artifacts, leftover background, halos, or distortions). Respond with only JSON: {"score": 0-100, "issues": [short strings], "verdict": "pass" | "review"}. 100 means the product is perfectly preserved and edits are clean.';
 
 export const QcResultSchema = z.object({
-  score: z.number().min(0).max(100).transform((n) => Math.round(n)),
+  score: z
+    .number()
+    .min(0)
+    .max(100)
+    .transform((n) => Math.round(n)),
   issues: z.array(z.string().max(300)).max(20).default([]),
   verdict: z.enum(["pass", "review"]),
 });
@@ -52,7 +56,12 @@ export function parseQcResponse(text: string): QcResult | null {
  * Run QC: one retry on unparseable output or API error, then fall back to
  * verdict "review". Images scoring below `threshold` are always "review".
  */
-export async function runQc(provider: QcProvider, original: Buffer, edited: Buffer, threshold: number): Promise<QcResult> {
+export async function runQc(
+  provider: QcProvider,
+  original: Buffer,
+  edited: Buffer,
+  threshold: number,
+): Promise<QcResult> {
   let a: Buffer;
   let b: Buffer;
   try {
@@ -84,7 +93,12 @@ export class AnthropicQcProvider implements QcProvider {
     fetchImpl?: typeof fetch,
   ) {
     if (!model) throw new Error("ANTHROPIC_QC_MODEL is not set");
-    this.client = new Anthropic({ apiKey, maxRetries: 2, timeout: 120_000, ...(fetchImpl ? { fetch: fetchImpl } : {}) });
+    this.client = new Anthropic({
+      apiKey,
+      maxRetries: 2,
+      timeout: 120_000,
+      ...(fetchImpl ? { fetch: fetchImpl } : {}),
+    });
   }
 
   async compare(originalJpeg: Buffer, editedJpeg: Buffer): Promise<string> {
@@ -100,9 +114,15 @@ export class AnthropicQcProvider implements QcProvider {
           role: "user",
           content: [
             { type: "text", text: "Image 1 (original):" },
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: originalJpeg.toString("base64") } },
+            {
+              type: "image",
+              source: { type: "base64", media_type: "image/jpeg", data: originalJpeg.toString("base64") },
+            },
             { type: "text", text: "Image 2 (edited):" },
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: editedJpeg.toString("base64") } },
+            {
+              type: "image",
+              source: { type: "base64", media_type: "image/jpeg", data: editedJpeg.toString("base64") },
+            },
             { type: "text", text: QC_INSTRUCTION },
           ],
         },
@@ -129,7 +149,9 @@ export class MockQcProvider implements QcProvider {
   async compare(originalJpeg: Buffer, editedJpeg: Buffer): Promise<string> {
     const size = 64;
     const [a, b] = await Promise.all(
-      [originalJpeg, editedJpeg].map((x) => sharp(x).resize(size, size, { fit: "fill" }).removeAlpha().raw().toBuffer()),
+      [originalJpeg, editedJpeg].map((x) =>
+        sharp(x).resize(size, size, { fit: "fill" }).removeAlpha().raw().toBuffer(),
+      ),
     );
     let diff = 0;
     for (let i = 0; i < a.length; i++) diff += Math.abs(a[i] - b[i]);

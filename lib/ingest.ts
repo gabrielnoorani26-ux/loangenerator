@@ -3,7 +3,7 @@
  * oriented dimensions, and build a thumbnail. Pure w.r.t. storage — callers
  * persist the returned buffers.
  */
-import sharp, { type Metadata, type Sharp } from "sharp";
+import sharp, { type Metadata } from "sharp";
 import { sniffImageType } from "./mime";
 
 export class UploadValidationError extends Error {
@@ -72,5 +72,9 @@ export async function ingestImage(input: Buffer, filename: string, maxBytes: num
 
 /** 480px WebP thumbnail, EXIF-oriented, transparency preserved. */
 export async function makeThumbnail(data: Buffer): Promise<Buffer> {
-  return sharp(data).rotate().resize(480, 480, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toBuffer();
+  return sharp(data)
+    .rotate()
+    .resize(480, 480, { fit: "inside", withoutEnlargement: true })
+    .webp({ quality: 78 })
+    .toBuffer();
 }

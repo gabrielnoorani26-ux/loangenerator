@@ -40,7 +40,12 @@ export const GET = route(async (req, ctx: RouteContext<"/api/batches/[id]/export
   const { entries, manifest } = planPart(selected, q, q.part);
   const base = sanitizeFilenamePart(batch.name) || "batch";
   const filename = parts > 1 ? `${base}_part${q.part}of${parts}.zip` : `${base}.zip`;
-  if (q.part === 1) await logActivity("batch.exported", `${selected.length} image(s) · ${q.scope} · ${q.group}${parts > 1 ? ` · ${parts} parts` : ""}`, id);
+  if (q.part === 1)
+    await logActivity(
+      "batch.exported",
+      `${selected.length} image(s) · ${q.scope} · ${q.group}${parts > 1 ? ` · ${parts} parts` : ""}`,
+      id,
+    );
   return new Response(streamZip(entries, manifest, storage()), {
     headers: {
       "Content-Type": "application/zip",

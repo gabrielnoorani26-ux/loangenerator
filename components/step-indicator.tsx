@@ -10,7 +10,15 @@ const STEPS = [
   { key: "review", label: "Review & Export" },
 ] as const;
 
-export function StepIndicator({ batchId, current, reachable }: { batchId: string; current: string; reachable: Set<string> }) {
+export function StepIndicator({
+  batchId,
+  current,
+  reachable,
+}: {
+  batchId: string;
+  current: string;
+  reachable: Set<string>;
+}) {
   const idx = STEPS.findIndex((s) => s.key === current);
   return (
     <ol className="flex flex-wrap items-center gap-2 text-sm">

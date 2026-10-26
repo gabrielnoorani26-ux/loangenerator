@@ -5,7 +5,14 @@ import { Loader2, Sparkles } from "lucide-react";
 import { apiSend } from "@/lib/client/api";
 import type { Estimate } from "@/lib/estimate";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCents } from "@/lib/utils";
 
@@ -28,7 +35,15 @@ export function RerunDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        {open && <RerunForm batchId={batchId} ids={ids} initialInstruction={initialInstruction} onConfirm={onConfirm} onCancel={() => onOpenChange(false)} />}
+        {open && (
+          <RerunForm
+            batchId={batchId}
+            ids={ids}
+            initialInstruction={initialInstruction}
+            onConfirm={onConfirm}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -52,11 +67,19 @@ function RerunForm({
   const { data: estimate } = useQuery({
     queryKey: ["rerun-estimate", batchId, ids.join(","), instruction],
     queryFn: async () =>
-      (await apiSend<{ estimate: Estimate }>(`/api/batches/${batchId}/estimate`, "POST", { ids, instruction: instruction.trim() || null })).estimate,
+      (
+        await apiSend<{ estimate: Estimate }>(`/api/batches/${batchId}/estimate`, "POST", {
+          ids,
+          instruction: instruction.trim() || null,
+        })
+      ).estimate,
   });
   // A forced re-run never reuses the cache, so every image is a new call.
   const calls = ids.length;
-  const perCall = estimate && estimate.aiCalls + estimate.bgRemovalCalls > 0 ? estimate.estimatedCostCents / (estimate.aiCalls + estimate.bgRemovalCalls) : null;
+  const perCall =
+    estimate && estimate.aiCalls + estimate.bgRemovalCalls > 0
+      ? estimate.estimatedCostCents / (estimate.aiCalls + estimate.bgRemovalCalls)
+      : null;
   return (
     <>
       <DialogHeader>
@@ -75,7 +98,10 @@ function RerunForm({
         aria-label="Re-run instruction"
       />
       <div className="rounded-md bg-muted p-3 text-sm">
-        This will use <span className="font-semibold">{calls} AI call{calls === 1 ? "" : "s"}</span>
+        This will use{" "}
+        <span className="font-semibold">
+          {calls} AI call{calls === 1 ? "" : "s"}
+        </span>
         {perCall != null && (
           <>
             {" "}

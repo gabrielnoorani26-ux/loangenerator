@@ -30,7 +30,9 @@ export function useImages(id: string, opts: { pollWhileProcessing?: boolean } = 
   return useQuery({
     queryKey: qk.images(id),
     queryFn: async () => (await apiGet<{ images: ImageDTO[] }>(`/api/batches/${id}/images`)).images,
-    refetchInterval: opts.pollWhileProcessing ? (q) => (q.state.data?.some((i) => BUSY.has(i.status)) ? 1500 : false) : false,
+    refetchInterval: opts.pollWhileProcessing
+      ? (q) => (q.state.data?.some((i) => BUSY.has(i.status)) ? 1500 : false)
+      : false,
   });
 }
 

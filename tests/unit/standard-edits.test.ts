@@ -19,7 +19,11 @@ import {
 import { defaultEditSettings, StandardSettingsSchema, OutputSettingsSchema } from "@/lib/settings";
 
 /** Solid background with a colored rectangle "product". */
-async function productImage(w = 400, h = 300, opts: { bg?: string; transparent?: boolean; noise?: boolean } = {}): Promise<Buffer> {
+async function productImage(
+  w = 400,
+  h = 300,
+  opts: { bg?: string; transparent?: boolean; noise?: boolean } = {},
+): Promise<Buffer> {
   const bg = opts.transparent ? "" : `<rect width="100%" height="100%" fill="${opts.bg ?? "#eeeeee"}"/>`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${bg}
     <rect x="${w * 0.25}" y="${h * 0.3}" width="${w * 0.5}" height="${h * 0.4}" fill="#c0392b"/>
@@ -33,7 +37,9 @@ async function pixel(img: RawImage, x: number, y: number) {
 }
 
 async function stats(img: RawImage) {
-  return sharp(img.data, { raw: { width: img.width, height: img.height, channels: 4 } }).removeAlpha().stats();
+  return sharp(img.data, { raw: { width: img.width, height: img.height, channels: 4 } })
+    .removeAlpha()
+    .stats();
 }
 
 const std = (over: object = {}) => StandardSettingsSchema.parse(over);
@@ -47,7 +53,9 @@ describe("auto-trim", () => {
     expect(t.height).toBe(120);
   });
   it("leaves a fully uniform image untouched", async () => {
-    const flat = await sharp({ create: { width: 50, height: 40, channels: 3, background: "#fff" } }).png().toBuffer();
+    const flat = await sharp({ create: { width: 50, height: 40, channels: 3, background: "#fff" } })
+      .png()
+      .toBuffer();
     const img = await decode(flat);
     const t = await autoTrim(img, 10);
     expect([t.width, t.height]).toEqual([50, 40]);
@@ -85,7 +93,10 @@ describe("crop to aspect", () => {
 describe("fit to canvas", () => {
   it("produces exact canvas size with padding and fill color", async () => {
     const img = await autoTrim(await decode(await productImage(400, 300)), 10);
-    const f = await fitToCanvas(img, std({ fit: { enabled: true, width: 1000, height: 1000, paddingPct: 10, fillColor: "#00ff00" } }).fit);
+    const f = await fitToCanvas(
+      img,
+      std({ fit: { enabled: true, width: 1000, height: 1000, paddingPct: 10, fillColor: "#00ff00" } }).fit,
+    );
     expect([f.width, f.height]).toEqual([1000, 1000]);
     expect(await pixel(f, 5, 5)).toEqual([0, 255, 0, 255]);
     // product spans the inner width (80% of 1000) and is centered
@@ -122,7 +133,9 @@ describe("resize", () => {
 describe("adjustments", () => {
   const adj = (o: object) => std({ adjustments: o }).adjustments;
   it("documents the slider mapping", () => {
-    const p = adjustmentParams(adj({ brightness: 100, saturation: -100, contrast: 150 > 100 ? 100 : 0, warmth: 100, sharpness: 50 }));
+    const p = adjustmentParams(
+      adj({ brightness: 100, saturation: -100, contrast: 150 > 100 ? 100 : 0, warmth: 100, sharpness: 50 }),
+    );
     expect(p.brightness).toBe(1.5);
     expect(p.saturation).toBe(0);
     expect(p.contrast.a).toBeCloseTo(1 + 100 / 150);
@@ -180,17 +193,48 @@ describe("watermark", () => {
     expect(watermarkPosition("top-center", 1000, 800, 100, 50, 10)).toEqual({ left: 450, top: 10 });
   });
   it("composites a text watermark in the chosen corner only", async () => {
-    const base = await decode(await sharp({ create: { width: 600, height: 400, channels: 3, background: "#203040" } }).png().toBuffer());
-    const wm = std({ watermark: { enabled: true, type: "text", text: "BATCHLENS", position: "bottom-right", sizePct: 30, opacity: 100 } }).watermark;
+    const base = await decode(
+      await sharp({ create: { width: 600, height: 400, channels: 3, background: "#203040" } })
+        .png()
+        .toBuffer(),
+    );
+    const wm = std({
+      watermark: {
+        enabled: true,
+        type: "text",
+        text: "BATCHLENS",
+        position: "bottom-right",
+        sizePct: 30,
+        opacity: 100,
+      },
+    }).watermark;
     const w = await applyWatermark(base, wm, {});
-    const br = await stats({ ...w, data: await sharp(w.data, { raw: { width: 600, height: 400, channels: 4 } }).extract({ left: 400, top: 320, width: 200, height: 80 }).raw().toBuffer(), width: 200, height: 80 });
+    const br = await stats({
+      ...w,
+      data: await sharp(w.data, { raw: { width: 600, height: 400, channels: 4 } })
+        .extract({ left: 400, top: 320, width: 200, height: 80 })
+        .raw()
+        .toBuffer(),
+      width: 200,
+      height: 80,
+    });
     expect(br.channels[0].max).toBeGreaterThan(200); // white text present
     expect(await pixel(w, 5, 5)).toEqual(await pixel(base, 5, 5));
   });
   it("applies logo opacity", async () => {
-    const base = await decode(await sharp({ create: { width: 400, height: 400, channels: 3, background: "#000" } }).png().toBuffer());
-    const logo = await sharp({ create: { width: 100, height: 100, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } } }).png().toBuffer();
-    const wm = std({ watermark: { enabled: true, type: "logo", position: "center", sizePct: 25, opacity: 50, marginPct: 0 } }).watermark;
+    const base = await decode(
+      await sharp({ create: { width: 400, height: 400, channels: 3, background: "#000" } })
+        .png()
+        .toBuffer(),
+    );
+    const logo = await sharp({
+      create: { width: 100, height: 100, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },
+    })
+      .png()
+      .toBuffer();
+    const wm = std({
+      watermark: { enabled: true, type: "logo", position: "center", sizePct: 25, opacity: 50, marginPct: 0 },
+    }).watermark;
     const w = await applyWatermark(base, wm, { logo });
     const [r] = await pixel(w, 200, 200);
     expect(r).toBeGreaterThan(110);
@@ -221,9 +265,12 @@ describe("export", () => {
     }
   });
   it("steps quality down by 5 to meet max KB, with floor 50", async () => {
-    const noisy = await sharp(Buffer.from(Array.from({ length: 600 * 600 * 3 }, () => Math.floor(Math.random() * 256))), {
-      raw: { width: 600, height: 600, channels: 3 },
-    })
+    const noisy = await sharp(
+      Buffer.from(Array.from({ length: 600 * 600 * 3 }, () => Math.floor(Math.random() * 256))),
+      {
+        raw: { width: 600, height: 600, channels: 3 },
+      },
+    )
       .png()
       .toBuffer();
     const img = await decode(noisy);
@@ -264,7 +311,10 @@ describe("full pipeline", () => {
     expect((await sharp(r.data).metadata()).format).toBe("webp");
   });
   it("honours EXIF orientation", async () => {
-    const src = await sharp(await productImage(300, 200)).jpeg().withMetadata({ orientation: 6 }).toBuffer();
+    const src = await sharp(await productImage(300, 200))
+      .jpeg()
+      .withMetadata({ orientation: 6 })
+      .toBuffer();
     const r = await applyStandardEdits(src, std(), out());
     expect([r.width, r.height]).toEqual([200, 300]);
   });
@@ -273,7 +323,10 @@ describe("full pipeline", () => {
 describe("preview scaling", () => {
   it("scales pixel targets down and leaves relative settings alone", async () => {
     const { scaleStandardForPreview } = await import("@/lib/standard-edits");
-    const s = std({ fit: { enabled: true, width: 2400, height: 2000, paddingPct: 10 }, resize: { enabled: true, mode: "longest", value: 1600 } });
+    const s = std({
+      fit: { enabled: true, width: 2400, height: 2000, paddingPct: 10 },
+      resize: { enabled: true, mode: "longest", value: 1600 },
+    });
     const { standard, scale } = scaleStandardForPreview(s, 1200);
     expect(scale).toBe(0.5);
     expect([standard.fit.width, standard.fit.height, standard.resize.value]).toEqual([1200, 1000, 800]);

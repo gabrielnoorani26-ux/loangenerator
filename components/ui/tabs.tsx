@@ -5,7 +5,12 @@ import { cn } from "@/lib/utils";
 
 const Tabs = TabsPrimitive.Root;
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("inline-flex h-9 items-center rounded-lg bg-gray-100 p-1 text-muted-foreground", className)} {...props} />;
+  return (
+    <TabsPrimitive.List
+      className={cn("inline-flex h-9 items-center rounded-lg bg-gray-100 p-1 text-muted-foreground", className)}
+      {...props}
+    />
+  );
 }
 function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (

@@ -68,7 +68,9 @@ describe("mock provider", () => {
     const out = await p.edit({ image: await productPng(), mime: "image/png", width: 300, height: 200, prompt: "x" });
     expect(out.length).toBeGreaterThan(100);
     process.env.MOCK_FAIL_RATE = "1";
-    await expect(p.edit({ image: await productPng(), mime: "image/png", width: 300, height: 200, prompt: "x" })).rejects.toBeInstanceOf(ProviderError);
+    await expect(
+      p.edit({ image: await productPng(), mime: "image/png", width: 300, height: 200, prompt: "x" }),
+    ).rejects.toBeInstanceOf(ProviderError);
     process.env.MOCK_FAIL_RATE = "0";
   });
 });

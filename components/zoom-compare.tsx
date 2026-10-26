@@ -17,7 +17,17 @@ interface View {
   y: number;
 }
 
-export function ZoomCompare({ before, after, mode, className }: { before: string; after: string | null; mode: CompareMode; className?: string }) {
+export function ZoomCompare({
+  before,
+  after,
+  mode,
+  className,
+}: {
+  before: string;
+  after: string | null;
+  mode: CompareMode;
+  className?: string;
+}) {
   const [view, setView] = useState<View>({ scale: 1, x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
   const [panning, setPanning] = useState(false);
@@ -64,9 +74,20 @@ export function ZoomCompare({ before, after, mode, className }: { before: string
   };
 
   const pane = (src: string, label: string) => (
-    <div className="checkerboard relative h-full min-h-0 overflow-hidden" onWheel={onWheel} {...panHandlers} style={{ cursor: view.scale > 1 ? "grab" : "zoom-in" }}>
+    <div
+      className="checkerboard relative h-full min-h-0 overflow-hidden"
+      onWheel={onWheel}
+      {...panHandlers}
+      style={{ cursor: view.scale > 1 ? "grab" : "zoom-in" }}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={label} draggable={false} className="absolute inset-0 size-full object-contain select-none" style={style} />
+      <img
+        src={src}
+        alt={label}
+        draggable={false}
+        className="absolute inset-0 size-full object-contain select-none"
+        style={style}
+      />
       <span className="absolute top-2 left-2 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">{label}</span>
     </div>
   );
@@ -94,11 +115,18 @@ export function ZoomCompare({ before, after, mode, className }: { before: string
         <Button size="icon-sm" variant="ghost" onClick={() => zoomBy(1 / 1.4)} aria-label="Zoom out">
           <Minus />
         </Button>
-        <span className="flex w-12 items-center justify-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span>
+        <span className="flex w-12 items-center justify-center text-xs tabular-nums">
+          {Math.round(view.scale * 100)}%
+        </span>
         <Button size="icon-sm" variant="ghost" onClick={() => zoomBy(1.4)} aria-label="Zoom in">
           <Plus />
         </Button>
-        <Button size="icon-sm" variant="ghost" onClick={() => setView({ scale: 1, x: 0, y: 0 })} aria-label="Reset zoom">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          onClick={() => setView({ scale: 1, x: 0, y: 0 })}
+          aria-label="Reset zoom"
+        >
           <RotateCcw />
         </Button>
       </div>

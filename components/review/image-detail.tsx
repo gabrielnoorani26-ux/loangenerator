@@ -2,7 +2,18 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ChevronLeft, ChevronRight, Download, History, Image as ImageIcon, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  History,
+  Image as ImageIcon,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { apiGet, apiSend, errorMessage } from "@/lib/client/api";
 import { qk } from "@/lib/client/hooks";
 import type { ImageDTO } from "@/lib/batches";
@@ -11,7 +22,13 @@ import type { EditSettings } from "@/lib/settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,8 +71,23 @@ export function ImageDetail({
 }) {
   return (
     <Dialog open={!!image} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="h-[92vh] w-[96vw] max-w-[1500px] grid-rows-[auto_1fr_auto] gap-3 p-4" showClose={false} aria-describedby={undefined}>
-        {image && <DetailBody key={image.id} image={image} batchId={batchId} settings={settings} onClose={onClose} onPrev={onPrev} onNext={onNext} position={position} />}
+      <DialogContent
+        className="h-[92vh] w-[96vw] max-w-[1500px] grid-rows-[auto_1fr_auto] gap-3 p-4"
+        showClose={false}
+        aria-describedby={undefined}
+      >
+        {image && (
+          <DetailBody
+            key={image.id}
+            image={image}
+            batchId={batchId}
+            settings={settings}
+            onClose={onClose}
+            onPrev={onPrev}
+            onNext={onNext}
+            position={position}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -110,7 +142,8 @@ function DetailBody({
   };
   const approve = () => run("approve", () => apiSend(`/api/images/${image.id}/approve`, "POST")).then(onNext);
   const reject = () => run("reject", () => apiSend(`/api/images/${image.id}/reject`, "POST")).then(onNext);
-  const saveMeta = (data: Record<string, unknown>) => run("meta", () => apiSend(`/api/images/${image.id}`, "PATCH", data));
+  const saveMeta = (data: Record<string, unknown>) =>
+    run("meta", () => apiSend(`/api/images/${image.id}`, "PATCH", data));
 
   // Keyboard: ←/→ navigate, A approve, R reject, Space toggle before/after, Esc close (Radix).
   useEffect(() => {
@@ -175,10 +208,20 @@ function DetailBody({
 
         <aside className="min-h-0 space-y-4 overflow-y-auto pr-1 text-sm">
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="success" onClick={approve} disabled={!!busy || !reviewable(image)} data-testid="detail-approve">
+            <Button
+              variant="success"
+              onClick={approve}
+              disabled={!!busy || !reviewable(image)}
+              data-testid="detail-approve"
+            >
               {busy === "approve" ? <Loader2 className="animate-spin" /> : <Check />} Approve
             </Button>
-            <Button variant="outline" className="text-destructive" onClick={reject} disabled={!!busy || !reviewable(image)}>
+            <Button
+              variant="outline"
+              className="text-destructive"
+              onClick={reject}
+              disabled={!!busy || !reviewable(image)}
+            >
               <X /> Reject
             </Button>
             <Button variant="outline" onClick={() => setRerunOpen(true)} disabled={!!busy || processing}>
@@ -186,7 +229,13 @@ function DetailBody({
             </Button>
             <Button
               variant="outline"
-              onClick={() => run("std", () => apiSend(`/api/images/${image.id}/reapply-standard`, "POST"), "Re-applying standard edits (no AI cost)")}
+              onClick={() =>
+                run(
+                  "std",
+                  () => apiSend(`/api/images/${image.id}/reapply-standard`, "POST"),
+                  "Re-applying standard edits (no AI cost)",
+                )
+              }
               disabled={!!busy || processing}
               title="Re-applies the batch's standard edits only — zero AI cost"
             >
@@ -206,7 +255,13 @@ function DetailBody({
               <ImageIcon /> {image.useOriginal ? "Use AI result" : "Use original"}
             </Button>
             <Button variant="outline" asChild disabled={!image.editedUrl}>
-              <a href={image.editedUrl ? `${image.editedUrl}?download=${encodeURIComponent(image.outputFilename ?? "image")}` : undefined}>
+              <a
+                href={
+                  image.editedUrl
+                    ? `${image.editedUrl}?download=${encodeURIComponent(image.outputFilename ?? "image")}`
+                    : undefined
+                }
+              >
                 <Download /> Download
               </a>
             </Button>
@@ -226,7 +281,13 @@ function DetailBody({
               {versions.map((v) => (
                 <DropdownMenuItem
                   key={v.id}
-                  onSelect={() => run("revert", () => apiSend(`/api/images/${image.id}/revert`, "POST", { versionId: v.id }), "Reverted")}
+                  onSelect={() =>
+                    run(
+                      "revert",
+                      () => apiSend(`/api/images/${image.id}/revert`, "POST", { versionId: v.id }),
+                      "Reverted",
+                    )
+                  }
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={v.thumbUrl} alt="" className="checkerboard size-12 rounded border object-contain" />
@@ -248,7 +309,8 @@ function DetailBody({
             <section className="space-y-1">
               <h3 className="font-semibold">Automated QC</h3>
               <p>
-                Score <span className="font-semibold">{image.qcScore}</span> · {image.qcVerdict === "pass" ? "pass" : "needs review"}
+                Score <span className="font-semibold">{image.qcScore}</span> ·{" "}
+                {image.qcVerdict === "pass" ? "pass" : "needs review"}
               </p>
               {image.qcIssues.length > 0 && (
                 <ul className="list-disc pl-5 text-muted-foreground">
@@ -268,7 +330,11 @@ function DetailBody({
                 {image.originalWidth}×{image.originalHeight} · {formatBytesKb(image.originalSizeKb)}
               </dd>
               <dt>Edited</dt>
-              <dd>{image.outputWidth ? `${image.outputWidth}×${image.outputHeight} · ${formatBytesKb(image.outputSizeKb)}` : "—"}</dd>
+              <dd>
+                {image.outputWidth
+                  ? `${image.outputWidth}×${image.outputHeight} · ${formatBytesKb(image.outputSizeKb)}`
+                  : "—"}
+              </dd>
               <dt>Source</dt>
               <dd>{image.useOriginal ? "Original (AI skipped)" : image.hasAiResult ? "AI result" : "Original"}</dd>
               {image.perImageInstruction && (
@@ -301,14 +367,27 @@ function DetailBody({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label htmlFor="d-style">Style</Label>
-                <Input id="d-style" value={style} onChange={(e) => setStyle(e.target.value)} onBlur={() => style !== (image.styleCode ?? "") && saveMeta({ styleCode: style || null })} />
+                <Input
+                  id="d-style"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  onBlur={() => style !== (image.styleCode ?? "") && saveMeta({ styleCode: style || null })}
+                />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="d-color">Color</Label>
-                <Input id="d-color" value={color} onChange={(e) => setColor(e.target.value)} onBlur={() => color !== (image.colorName ?? "") && saveMeta({ colorName: color || null })} />
+                <Input
+                  id="d-color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  onBlur={() => color !== (image.colorName ?? "") && saveMeta({ colorName: color || null })}
+                />
               </div>
             </div>
-            <Select value={image.viewAngle ?? "none"} onValueChange={(v) => saveMeta({ viewAngle: v === "none" ? null : v })}>
+            <Select
+              value={image.viewAngle ?? "none"}
+              onValueChange={(v) => saveMeta({ viewAngle: v === "none" ? null : v })}
+            >
               <SelectTrigger aria-label="View angle">
                 <SelectValue />
               </SelectTrigger>
@@ -321,7 +400,9 @@ function DetailBody({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">Metadata changes apply to filenames on the next re-run (Standard only is free).</p>
+            <p className="text-xs text-muted-foreground">
+              Metadata changes apply to filenames on the next re-run (Standard only is free).
+            </p>
           </section>
         </aside>
       </div>
@@ -342,7 +423,11 @@ function DetailBody({
         ids={[image.id]}
         initialInstruction={image.perImageInstruction ?? ""}
         onConfirm={async (instruction) => {
-          await run("rerun", () => apiSend(`/api/images/${image.id}/rerun-ai`, "POST", { instruction }), "AI re-run queued");
+          await run(
+            "rerun",
+            () => apiSend(`/api/images/${image.id}/rerun-ai`, "POST", { instruction }),
+            "AI re-run queued",
+          );
         }}
       />
     </>

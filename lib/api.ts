@@ -69,5 +69,9 @@ export function parseQuery<T extends z.ZodType>(req: Request, schema: T): z.infe
 
 export const ok = <T>(data: T, init?: ResponseInit) => NextResponse.json(data, init);
 
-export const IdParam = z.string().min(1).max(64).regex(/^[A-Za-z0-9_-]+$/);
+export const IdParam = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z0-9_-]+$/);
 export const IdList = z.array(IdParam).min(1).max(1000);

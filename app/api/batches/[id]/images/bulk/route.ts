@@ -5,7 +5,11 @@ import { deleteImages, reapplyStandard, rerunAi, setReviewStatus, useOriginal } 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("approve"), ids: IdList }),
   z.object({ action: z.literal("reject"), ids: IdList }),
-  z.object({ action: z.literal("rerun-ai"), ids: IdList, instruction: z.string().trim().max(500).nullable().optional() }),
+  z.object({
+    action: z.literal("rerun-ai"),
+    ids: IdList,
+    instruction: z.string().trim().max(500).nullable().optional(),
+  }),
   z.object({ action: z.literal("reapply-standard"), ids: IdList }),
   z.object({ action: z.literal("use-original"), ids: IdList, value: z.boolean().default(true) }),
   z.object({ action: z.literal("delete"), ids: IdList }),

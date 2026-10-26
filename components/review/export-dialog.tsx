@@ -7,7 +7,14 @@ import { apiGet, apiSend, errorMessage } from "@/lib/client/api";
 import { qk } from "@/lib/client/hooks";
 import type { ImageDTO } from "@/lib/batches";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -50,7 +57,13 @@ export function ExportDialog({
   const matching = useMemo(() => {
     const sel = new Set(selectedIds);
     return images.filter(
-      (i) => i.editedUrl && (scope === "approved" ? i.status === "APPROVED" : scope === "done" ? i.status === "DONE" || i.status === "APPROVED" : sel.has(i.id)),
+      (i) =>
+        i.editedUrl &&
+        (scope === "approved"
+          ? i.status === "APPROVED"
+          : scope === "done"
+            ? i.status === "DONE" || i.status === "APPROVED"
+            : sel.has(i.id)),
     );
   }, [images, scope, selectedIds]);
 
@@ -83,7 +96,8 @@ export function ExportDialog({
           bytes += value.length;
           setState({ part, parts, mb: bytes / 1024 / 1024 });
         }
-        const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? `export_part${part}.zip`;
+        const name =
+          /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? `export_part${part}.zip`;
         const url = URL.createObjectURL(new Blob(chunks as BlobPart[], { type: "application/zip" }));
         const a = document.createElement("a");
         a.href = url;
@@ -128,7 +142,8 @@ export function ExportDialog({
                 <RadioGroupItem value="approved" /> Approved only ({approvedCount})
               </Label>
               <Label className="font-normal">
-                <RadioGroupItem value="done" /> All done, excluding rejected ({images.filter((i) => i.status === "DONE" || i.status === "APPROVED").length})
+                <RadioGroupItem value="done" /> All done, excluding rejected (
+                {images.filter((i) => i.status === "DONE" || i.status === "APPROVED").length})
               </Label>
               <Label className="font-normal">
                 <RadioGroupItem value="selected" disabled={!selectedIds.length} /> Selected ({selectedIds.length})
@@ -156,8 +171,14 @@ export function ExportDialog({
             Include manifest.csv <Switch checked={manifest} onCheckedChange={setManifest} />
           </Label>
           <div className="rounded-md bg-muted p-3 font-mono text-xs">
-            {preview.length ? preview.map((p) => <div key={p}>{p}</div>) : <span className="font-sans text-muted-foreground">No images match.</span>}
-            {matching.length > preview.length && <div className="text-muted-foreground">…and {matching.length - preview.length} more</div>}
+            {preview.length ? (
+              preview.map((p) => <div key={p}>{p}</div>)
+            ) : (
+              <span className="font-sans text-muted-foreground">No images match.</span>
+            )}
+            {matching.length > preview.length && (
+              <div className="text-muted-foreground">…and {matching.length - preview.length} more</div>
+            )}
           </div>
           {state && (
             <div className="space-y-1">
@@ -183,7 +204,8 @@ export function ExportDialog({
             Close
           </Button>
           <Button onClick={download} disabled={!!state || matching.length === 0} data-testid="download-export">
-            {state ? <Loader2 className="animate-spin" /> : <Download />} Download {matching.length} image{matching.length === 1 ? "" : "s"}
+            {state ? <Loader2 className="animate-spin" /> : <Download />} Download {matching.length} image
+            {matching.length === 1 ? "" : "s"}
           </Button>
         </DialogFooter>
       </DialogContent>

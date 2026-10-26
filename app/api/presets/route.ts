@@ -16,11 +16,15 @@ export const GET = route(async () => {
 
 export const POST = route(async (req) => {
   const body = await parseBody(req, PresetCreateSchema);
-  if (await prisma.preset.findUnique({ where: { name: body.name } })) throw conflict("A preset with that name already exists");
+  if (await prisma.preset.findUnique({ where: { name: body.name } }))
+    throw conflict("A preset with that name already exists");
   const preset = await prisma.preset.create({
     data: { name: body.name, description: body.description ?? null, category: body.category, settings: body.settings },
   });
   await logActivity("preset.created", `Preset “${preset.name}” created`);
   await generatePresetExample(preset);
-  return ok({ preset: serializePreset((await prisma.preset.findUnique({ where: { id: preset.id } }))!) }, { status: 201 });
+  return ok(
+    { preset: serializePreset((await prisma.preset.findUnique({ where: { id: preset.id } }))!) },
+    { status: 201 },
+  );
 });

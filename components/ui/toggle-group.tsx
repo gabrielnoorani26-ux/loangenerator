@@ -4,7 +4,12 @@ import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 function ToggleGroup({ className, ...props }: React.ComponentProps<typeof ToggleGroupPrimitive.Root>) {
-  return <ToggleGroupPrimitive.Root className={cn("inline-flex items-center rounded-[6px] border bg-card p-0.5 shadow-xs", className)} {...props} />;
+  return (
+    <ToggleGroupPrimitive.Root
+      className={cn("inline-flex items-center rounded-[6px] border bg-card p-0.5 shadow-xs", className)}
+      {...props}
+    />
+  );
 }
 function ToggleGroupItem({ className, ...props }: React.ComponentProps<typeof ToggleGroupPrimitive.Item>) {
   return (

@@ -20,7 +20,8 @@ export default function BatchLayout({ children }: { children: React.ReactNode })
     if (s === "DRAFT" || s === "READY" || s === "REVIEW") reachable.add("upload");
     if (batch.totalImages > 0 && s !== "PROCESSING" && s !== "PAUSED") reachable.add("settings");
     if (batch.hasSnapshot) reachable.add("processing");
-    if (["REVIEW", "COMPLETE", "CANCELLED", "PROCESSING", "PAUSED"].includes(s) && batch.hasSnapshot) reachable.add("review");
+    if (["REVIEW", "COMPLETE", "CANCELLED", "PROCESSING", "PAUSED"].includes(s) && batch.hasSnapshot)
+      reachable.add("review");
   }
 
   return (
@@ -33,7 +34,9 @@ export default function BatchLayout({ children }: { children: React.ReactNode })
             </Link>
             {batch ? (
               <>
-                <h1 className="truncate text-lg font-semibold" data-testid="batch-name">{batch.name}</h1>
+                <h1 className="truncate text-lg font-semibold" data-testid="batch-name">
+                  {batch.name}
+                </h1>
                 <Badge variant="outline">{batch.brand}</Badge>
                 <BatchStatusBadge status={batch.status} />
               </>

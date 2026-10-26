@@ -30,10 +30,17 @@ function AlertDialogFooter({ className, ...props }: React.ComponentProps<"div">)
 function AlertDialogTitle({ className, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
   return <AlertDialogPrimitive.Title className={cn("text-lg font-semibold", className)} {...props} />;
 }
-function AlertDialogDescription({ className, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
+function AlertDialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
   return <AlertDialogPrimitive.Description className={cn("text-sm text-muted-foreground", className)} {...props} />;
 }
-function AlertDialogAction({ className, variant = "default", ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Action> & { variant?: "default" | "destructive" }) {
+function AlertDialogAction({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Action> & { variant?: "default" | "destructive" }) {
   return <AlertDialogPrimitive.Action className={cn(buttonVariants({ variant }), className)} {...props} />;
 }
 function AlertDialogCancel({ className, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {

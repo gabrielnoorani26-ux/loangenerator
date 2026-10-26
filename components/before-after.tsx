@@ -40,10 +40,22 @@ export function BeforeAfter({
       data-testid="before-after"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={before} alt={beforeLabel} draggable={false} className="absolute inset-0 size-full object-contain" style={imgStyle} />
+      <img
+        src={before}
+        alt={beforeLabel}
+        draggable={false}
+        className="absolute inset-0 size-full object-contain"
+        style={imgStyle}
+      />
       <div className="absolute inset-0" style={{ clipPath: `inset(0 0 0 ${pos}%)` }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={after} alt={afterLabel} draggable={false} className="absolute inset-0 size-full object-contain" style={imgStyle} />
+        <img
+          src={after}
+          alt={afterLabel}
+          draggable={false}
+          className="absolute inset-0 size-full object-contain"
+          style={imgStyle}
+        />
       </div>
       <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-primary" style={{ left: `${pos}%` }}>
         <div className="absolute top-1/2 left-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-primary bg-white text-xs text-primary shadow">

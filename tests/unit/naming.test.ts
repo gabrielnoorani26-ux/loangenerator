@@ -16,9 +16,9 @@ const ctx: NamingContext = {
 
 describe("renderPattern", () => {
   it("replaces every token", () => {
-    expect(renderPattern("{original}|{batch}|{brand}|{style}|{color}|{view}|{index}|{date}|{width}|{height}", ctx)).toBe(
-      "IMG_0042_Spring_Drop_2026_Chelsea_Crew_CC2045_black_side_007_20261026_2000_1500",
-    );
+    expect(
+      renderPattern("{original}|{batch}|{brand}|{style}|{color}|{view}|{index}|{date}|{width}|{height}", ctx),
+    ).toBe("IMG_0042_Spring_Drop_2026_Chelsea_Crew_CC2045_black_side_007_20261026_2000_1500");
   });
   it("zero-pads index to 3 digits", () => {
     expect(renderPattern("{index}", { ...ctx, index: 1 })).toBe("001");
@@ -45,7 +45,9 @@ describe("renderPattern", () => {
     expect(renderPattern("CON", ctx)).toBe("CON_");
   });
   it("limits length", () => {
-    expect(renderPattern("{original}", { ...ctx, originalFilename: "a".repeat(400) + ".jpg" }).length).toBeLessThanOrEqual(150);
+    expect(
+      renderPattern("{original}", { ...ctx, originalFilename: "a".repeat(400) + ".jpg" }).length,
+    ).toBeLessThanOrEqual(150);
   });
 });
 

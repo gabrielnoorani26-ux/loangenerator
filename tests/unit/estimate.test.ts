@@ -4,7 +4,13 @@ import { aiSettingsHash } from "@/lib/ai-hash";
 import { EditSettingsSchema } from "@/lib/settings";
 
 const prices = { ai: 10, bg: 2, bgAvailable: false };
-const img = (o: object = {}) => ({ useOriginal: false, perImageInstruction: null, aiSettingsHash: null, aiIntermediateKey: null, ...o });
+const img = (o: object = {}) => ({
+  useOriginal: false,
+  perImageInstruction: null,
+  aiSettingsHash: null,
+  aiIntermediateKey: null,
+  ...o,
+});
 
 describe("estimateRun", () => {
   const withAi = EditSettingsSchema.parse({ ai: { background: { mode: "solid" }, shadow: "soft" } });
@@ -18,7 +24,16 @@ describe("estimateRun", () => {
   });
   it("skips use-original images and cache hits", () => {
     const hash = aiSettingsHash(withAi.ai)!;
-    const e = estimateRun(withAi, [img(), img({ useOriginal: true }), img({ aiSettingsHash: hash, aiIntermediateKey: "k" }), img({ aiSettingsHash: "stale", aiIntermediateKey: "k" })], prices);
+    const e = estimateRun(
+      withAi,
+      [
+        img(),
+        img({ useOriginal: true }),
+        img({ aiSettingsHash: hash, aiIntermediateKey: "k" }),
+        img({ aiSettingsHash: "stale", aiIntermediateKey: "k" }),
+      ],
+      prices,
+    );
     expect(e).toMatchObject({ aiCalls: 2, skippedOriginal: 1, cacheHits: 1, estimatedCostCents: 20 });
   });
   it("routes white-background-only to the cheaper provider when available", () => {
@@ -30,7 +45,10 @@ describe("estimateRun", () => {
   });
   it("standard-only setting changes keep the AI hash stable", () => {
     const a = EditSettingsSchema.parse({ ai: { background: { mode: "solid" } }, standard: { fit: { enabled: true } } });
-    const b = EditSettingsSchema.parse({ ai: { background: { mode: "solid", scenePreset: "marble" } }, output: { format: "png" } });
+    const b = EditSettingsSchema.parse({
+      ai: { background: { mode: "solid", scenePreset: "marble" } },
+      output: { format: "png" },
+    });
     expect(aiSettingsHash(a.ai)).toBe(aiSettingsHash(b.ai));
     expect(aiSettingsHash(a.ai, "extra")).not.toBe(aiSettingsHash(a.ai));
   });

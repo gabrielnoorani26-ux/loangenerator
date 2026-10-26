@@ -18,9 +18,20 @@ export const GET = route(async (req) => {
   const where: Prisma.BatchWhereInput = {};
   if (q.status) where.status = q.status;
   if (q.brand) where.brand = q.brand;
-  if (q.search) where.OR = [{ name: { contains: q.search } }, { description: { contains: q.search } }, { tags: { contains: q.search } }];
+  if (q.search)
+    where.OR = [
+      { name: { contains: q.search } },
+      { description: { contains: q.search } },
+      { tags: { contains: q.search } },
+    ];
   const orderBy: Prisma.BatchOrderByWithRelationInput =
-    q.sort === "oldest" ? { createdAt: "asc" } : q.sort === "name" ? { name: "asc" } : q.sort === "images" ? { totalImages: "desc" } : { createdAt: "desc" };
+    q.sort === "oldest"
+      ? { createdAt: "asc" }
+      : q.sort === "name"
+        ? { name: "asc" }
+        : q.sort === "images"
+          ? { totalImages: "desc" }
+          : { createdAt: "desc" };
   const batches = await prisma.batch.findMany({
     where,
     orderBy,

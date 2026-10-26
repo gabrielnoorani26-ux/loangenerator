@@ -77,13 +77,22 @@ export interface PipelineResult {
 }
 
 /** Prepare an image for the AI provider: oriented, ≤4096px, PNG if it has alpha else high-quality JPEG. */
-export async function prepareAiInput(original: Buffer): Promise<{ data: Buffer; mime: "image/png" | "image/jpeg"; width: number; height: number }> {
-  const base = sharp(original).rotate().resize(AI_MAX_INPUT_SIDE, AI_MAX_INPUT_SIDE, { fit: "inside", withoutEnlargement: true });
+export async function prepareAiInput(
+  original: Buffer,
+): Promise<{ data: Buffer; mime: "image/png" | "image/jpeg"; width: number; height: number }> {
+  const base = sharp(original)
+    .rotate()
+    .resize(AI_MAX_INPUT_SIDE, AI_MAX_INPUT_SIDE, { fit: "inside", withoutEnlargement: true });
   const meta = await sharp(original).metadata();
   const out = meta.hasAlpha
     ? await base.png().toBuffer({ resolveWithObject: true })
     : await base.jpeg({ quality: 95 }).toBuffer({ resolveWithObject: true });
-  return { data: out.data, mime: meta.hasAlpha ? "image/png" : "image/jpeg", width: out.info.width, height: out.info.height };
+  return {
+    data: out.data,
+    mime: meta.hasAlpha ? "image/png" : "image/jpeg",
+    width: out.info.width,
+    height: out.info.height,
+  };
 }
 
 /**
@@ -99,7 +108,11 @@ export async function runAiStep(
   const hash = aiSettingsHash(settings.ai, image.perImageInstruction)!;
   const route = isPureWhiteBackgroundOnly(settings.ai, image.perImageInstruction) ? "white-bg" : "edit";
   // Cache hit: same AI settings + instruction already produced a result.
-  if (image.aiIntermediateKey && image.aiSettingsHash === hash && (await deps.storage.exists(image.aiIntermediateKey))) {
+  if (
+    image.aiIntermediateKey &&
+    image.aiSettingsHash === hash &&
+    (await deps.storage.exists(image.aiIntermediateKey))
+  ) {
     return { key: image.aiIntermediateKey, hash, called: false, route };
   }
   const original = await deps.storage.get(image.originalKey);
@@ -110,7 +123,14 @@ export async function runAiStep(
     result = await bg.removeToWhite(input.data, deps.signal);
   } else {
     const prompt = buildPrompt(settings.ai, image.perImageInstruction)!;
-    result = await deps.editProvider().edit({ image: input.data, mime: input.mime, width: input.width, height: input.height, prompt, signal: deps.signal });
+    result = await deps.editProvider().edit({
+      image: input.data,
+      mime: input.mime,
+      width: input.width,
+      height: input.height,
+      prompt,
+      signal: deps.signal,
+    });
   }
   // Normalize to PNG so intermediates are lossless and format-independent.
   const png = await sharp(result).png().toBuffer();
@@ -122,7 +142,11 @@ export async function runAiStep(
   return out;
 }
 
-export async function processImage(image: PipelineImage, ctx: PipelineContext, deps: PipelineDeps): Promise<PipelineResult> {
+export async function processImage(
+  image: PipelineImage,
+  ctx: PipelineContext,
+  deps: PipelineDeps,
+): Promise<PipelineResult> {
   const { settings } = ctx;
   let ai: Awaited<ReturnType<typeof runAiStep>> = null;
 
@@ -144,7 +168,10 @@ export async function processImage(image: PipelineImage, ctx: PipelineContext, d
   const original = await deps.storage.get(image.originalKey);
   const source = aiKey ? await deps.storage.get(aiKey) : original;
   const assets = await loadWatermarkAssets(settings.standard.watermark);
-  const out = await applyStandardEdits(source, settings.standard, settings.output, { assets, metadataSource: original });
+  const out = await applyStandardEdits(source, settings.standard, settings.output, {
+    assets,
+    metadataSource: original,
+  });
 
   const ext = EXT_FOR_FORMAT[settings.output.format];
   const stamp = ctx.now.getTime();

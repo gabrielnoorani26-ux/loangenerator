@@ -26,7 +26,9 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground">Applies to all batches. API keys are configured in the server’s .env file.</p>
+        <p className="text-sm text-muted-foreground">
+          Applies to all batches. API keys are configured in the server’s .env file.
+        </p>
       </div>
       {settings ? <SettingsForm key={settings.id} initial={settings} /> : <Skeleton className="h-96" />}
       <WatermarkLibrary />
@@ -89,20 +91,50 @@ function SettingsForm({ initial }: { initial: AppSettingsDTO }) {
               </SelectContent>
             </Select>
           </div>
-          <SliderRow label="Concurrent AI calls" min={1} max={5} value={s.maxConcurrentAiCalls} onChange={(v) => setS({ ...s, maxConcurrentAiCalls: v })} />
-          <SliderRow label="Retries per image" min={0} max={5} value={s.maxRetries} onChange={(v) => setS({ ...s, maxRetries: v })} />
+          <SliderRow
+            label="Concurrent AI calls"
+            min={1}
+            max={5}
+            value={s.maxConcurrentAiCalls}
+            onChange={(v) => setS({ ...s, maxConcurrentAiCalls: v })}
+          />
+          <SliderRow
+            label="Retries per image"
+            min={0}
+            max={5}
+            value={s.maxRetries}
+            onChange={(v) => setS({ ...s, maxRetries: v })}
+          />
           <label className="flex items-center justify-between gap-3">
             <span>
               <span className="block text-sm font-medium">Automatic QC</span>
-              <span className="block text-xs text-muted-foreground">Vision check flags images where the product may have been altered</span>
+              <span className="block text-xs text-muted-foreground">
+                Vision check flags images where the product may have been altered
+              </span>
             </span>
-            <Switch checked={s.autoQcEnabled} onCheckedChange={(v) => save({ autoQcEnabled: v })} aria-label="Automatic QC" />
+            <Switch
+              checked={s.autoQcEnabled}
+              onCheckedChange={(v) => save({ autoQcEnabled: v })}
+              aria-label="Automatic QC"
+            />
           </label>
-          <SliderRow label="QC threshold (below = Needs review)" min={0} max={100} value={s.qcThreshold} onChange={(v) => setS({ ...s, qcThreshold: v })} />
+          <SliderRow
+            label="QC threshold (below = Needs review)"
+            min={0}
+            max={100}
+            value={s.qcThreshold}
+            onChange={(v) => setS({ ...s, qcThreshold: v })}
+          />
           <Button
             size="sm"
             variant="outline"
-            onClick={() => save({ maxConcurrentAiCalls: s.maxConcurrentAiCalls, maxRetries: s.maxRetries, qcThreshold: s.qcThreshold }).then(() => toast.success("Saved"))}
+            onClick={() =>
+              save({
+                maxConcurrentAiCalls: s.maxConcurrentAiCalls,
+                maxRetries: s.maxRetries,
+                qcThreshold: s.qcThreshold,
+              }).then(() => toast.success("Saved"))
+            }
             disabled={saving}
           >
             Save processing settings
@@ -134,7 +166,12 @@ function SettingsForm({ initial }: { initial: AppSettingsDTO }) {
               ))}
             </div>
             <div className="flex gap-2">
-              <Input placeholder="Add brand" value={newBrand} onChange={(e) => setNewBrand(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addBrand()} />
+              <Input
+                placeholder="Add brand"
+                value={newBrand}
+                onChange={(e) => setNewBrand(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addBrand()}
+              />
               <Button variant="outline" onClick={addBrand} disabled={!newBrand.trim()}>
                 <Plus /> Add
               </Button>
@@ -146,10 +183,13 @@ function SettingsForm({ initial }: { initial: AppSettingsDTO }) {
               id="naming"
               value={s.defaultNamingPattern}
               onChange={(e) => setS({ ...s, defaultNamingPattern: e.target.value })}
-              onBlur={() => s.defaultNamingPattern.trim() && save({ defaultNamingPattern: s.defaultNamingPattern.trim() })}
+              onBlur={() =>
+                s.defaultNamingPattern.trim() && save({ defaultNamingPattern: s.defaultNamingPattern.trim() })
+              }
             />
             <p className="text-xs text-muted-foreground">
-              Tokens: {NAMING_TOKENS.map((t) => `{${t}}`).join(" ")} · Example: <span className="font-mono">{exampleFilename(s.defaultNamingPattern || "{original}", "jpg")}</span>
+              Tokens: {NAMING_TOKENS.map((t) => `{${t}}`).join(" ")} · Example:{" "}
+              <span className="font-mono">{exampleFilename(s.defaultNamingPattern || "{original}", "jpg")}</span>
             </p>
           </div>
         </CardContent>
@@ -170,7 +210,11 @@ function WatermarkLibrary() {
       const form = new FormData();
       form.append("file", file);
       const res = await fetch("/api/watermarks", { method: "POST", body: form });
-      if (!res.ok) throw new Error(((await res.json().catch(() => null)) as { error?: { message?: string } } | null)?.error?.message ?? "Upload failed");
+      if (!res.ok)
+        throw new Error(
+          ((await res.json().catch(() => null)) as { error?: { message?: string } } | null)?.error?.message ??
+            "Upload failed",
+        );
       toast.success("Logo added");
       qc.invalidateQueries({ queryKey: qk.appSettings });
     } catch (e) {
@@ -189,7 +233,13 @@ function WatermarkLibrary() {
         <Button variant="outline" onClick={() => input.current?.click()} disabled={uploading}>
           {uploading ? <Loader2 className="animate-spin" /> : <Upload />} Upload PNG
         </Button>
-        <input ref={input} type="file" accept="image/png" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+        <input
+          ref={input}
+          type="file"
+          accept="image/png"
+          className="hidden"
+          onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
+        />
       </CardHeader>
       <CardContent>
         {!settings?.watermarkLibrary.length ? (
@@ -199,7 +249,11 @@ function WatermarkLibrary() {
             {settings.watermarkLibrary.map((w) => (
               <div key={w.id} className="group relative rounded-md border">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/api/files/${w.key}`} alt={w.name} className="checkerboard aspect-square w-full rounded-t-md object-contain p-2" />
+                <img
+                  src={`/api/files/${w.key}`}
+                  alt={w.name}
+                  className="checkerboard aspect-square w-full rounded-t-md object-contain p-2"
+                />
                 <p className="truncate px-2 py-1 text-xs">{w.name}</p>
                 <button
                   className="absolute top-1 right-1 cursor-pointer rounded bg-white/90 p-1 opacity-0 shadow group-hover:opacity-100 hover:text-destructive"
@@ -311,7 +365,8 @@ function ConnectionTests() {
         <div>
           <CardTitle>API connections</CardTitle>
           <CardDescription>
-            Image provider: <span className="font-medium">{config?.imageProvider ?? "…"}</span>. Each configured key is verified with a minimal request.
+            Image provider: <span className="font-medium">{config?.imageProvider ?? "…"}</span>. Each configured key is
+            verified with a minimal request.
           </CardDescription>
         </div>
         <Button variant="outline" onClick={run} disabled={running}>
@@ -323,10 +378,16 @@ function ConnectionTests() {
           {results.map((r) => (
             <div key={r.name} className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
               <span className="flex items-center gap-2">
-                {r.ok ? <CheckCircle2 className="size-4 text-emerald-600" /> : <XCircle className={r.configured ? "size-4 text-destructive" : "size-4 text-muted-foreground"} />}
+                {r.ok ? (
+                  <CheckCircle2 className="size-4 text-emerald-600" />
+                ) : (
+                  <XCircle className={r.configured ? "size-4 text-destructive" : "size-4 text-muted-foreground"} />
+                )}
                 {r.name}
               </span>
-              <span className={r.ok ? "text-emerald-700" : r.configured ? "text-destructive" : "text-muted-foreground"}>{r.message}</span>
+              <span className={r.ok ? "text-emerald-700" : r.configured ? "text-destructive" : "text-muted-foreground"}>
+                {r.message}
+              </span>
             </div>
           ))}
         </CardContent>

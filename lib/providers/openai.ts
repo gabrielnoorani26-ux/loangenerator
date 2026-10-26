@@ -9,7 +9,13 @@
  */
 import OpenAI, { toFile } from "openai";
 import { env } from "../env";
-import { errorFromStatus, ProviderError, toProviderError, type ImageEditProvider, type ImageEditRequest } from "./types";
+import {
+  errorFromStatus,
+  ProviderError,
+  toProviderError,
+  type ImageEditProvider,
+  type ImageEditRequest,
+} from "./types";
 
 type Quality = "low" | "medium" | "high" | "xhigh" | "max" | "auto";
 
@@ -86,7 +92,8 @@ function mapOpenAIError(err: unknown): ProviderError {
   if (err instanceof OpenAI.APIConnectionError) return new ProviderError("network", err.message);
   if (err instanceof OpenAI.APIError) {
     const code = err.code ?? "";
-    if (code === "moderation_blocked" || code === "content_policy_violation") return new ProviderError("content_policy", err.message, undefined, err.status);
+    if (code === "moderation_blocked" || code === "content_policy_violation")
+      return new ProviderError("content_policy", err.message, undefined, err.status);
     return errorFromStatus(err.status ?? 0, err.message, err.headers?.get?.("retry-after") ?? null);
   }
   return toProviderError(err);

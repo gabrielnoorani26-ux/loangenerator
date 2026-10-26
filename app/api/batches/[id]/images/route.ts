@@ -39,7 +39,12 @@ export const POST = route(async (req, ctx: Ctx) => {
   if (files.length === 0) throw new ApiError(400, "no_files", "No files were uploaded");
 
   const maxBytes = env.maxUploadMb * 1024 * 1024;
-  const results: { filename: string; image?: ReturnType<typeof serializeImage>; error?: string; duplicate?: boolean }[] = [];
+  const results: {
+    filename: string;
+    image?: ReturnType<typeof serializeImage>;
+    error?: string;
+    duplicate?: boolean;
+  }[] = [];
   for (const file of files) {
     const filename = file.name.replace(/^.*[\\/]/, "").slice(0, 200) || "image";
     try {

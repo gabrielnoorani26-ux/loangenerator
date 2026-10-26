@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Activity, Aperture, ChevronsLeft, ChevronsRight, LayoutDashboard, Layers, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,27 +12,32 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+// Sidebar state lives in localStorage; read it via an external store to avoid hydration mismatches.
+const listeners = new Set<() => void>();
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem("sidebar-collapsed") === "1";
+  } catch {
+    return false;
+  }
+}
+function writeCollapsed(v: boolean) {
+  try {
+    localStorage.setItem("sidebar-collapsed", v ? "1" : "0");
+  } catch {
+    /* storage unavailable */
+  }
+  listeners.forEach((l) => l());
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    try {
-      setCollapsed(localStorage.getItem("sidebar-collapsed") === "1");
-    } catch {
-      /* storage unavailable */
-    }
-  }, []);
-  const toggle = () => {
-    setCollapsed((c) => {
-      try {
-        localStorage.setItem("sidebar-collapsed", c ? "0" : "1");
-      } catch {
-        /* storage unavailable */
-      }
-      return !c;
-    });
-  };
+  const collapsed = useSyncExternalStore(subscribe, readCollapsed, () => false);
+  const toggle = () => writeCollapsed(!collapsed);
 
   return (
     <div className="flex min-h-screen">
@@ -48,7 +53,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
         <nav className="flex-1 space-y-1 p-2">
           {NAV.map(({ href, label, icon: Icon }) => {
-            const active = href === "/" ? pathname === "/" || pathname.startsWith("/batches") : pathname.startsWith(href);
+            const active =
+              href === "/" ? pathname === "/" || pathname.startsWith("/batches") : pathname.startsWith(href);
             return (
               <Link
                 key={href}

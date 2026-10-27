@@ -5,6 +5,7 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { toast } from "sonner";
 import { ChevronDown, Eye, FlaskConical, Loader2, Play, Save } from "lucide-react";
 import { apiSend, errorMessage } from "@/lib/client/api";
+import { localUnsupportedEdits } from "@/lib/local/support";
 import { qk, useAppSettings, useBatch, useConfig, useImages, usePresets } from "@/lib/client/hooks";
 import {
   EditSettingsSchema,
@@ -136,6 +137,7 @@ function SettingsEditor({ batch }: { batch: BatchDTO }) {
   const locked = batch.status === "PROCESSING" || batch.status === "PAUSED";
   const aiOn = hasAiEdits(settings.ai);
   const edits = listEdits(settings);
+  const unsupported = localUnsupportedEdits(settings.ai);
   const imageCount = images?.length ?? 0;
 
   return (
@@ -212,7 +214,15 @@ function SettingsEditor({ batch }: { batch: BatchDTO }) {
           <p className="text-sm" data-testid="cost-bar">
             <span className="font-medium">{imageCount} images</span>
             {" • "}
-            {aiOn || (estimate?.aiCalls ?? 0) > 0 ? (
+            {config?.localMode && aiOn ? (
+              <span>
+                {estimate ? estimate.aiCalls + estimate.bgRemovalCalls : "…"} local edits ·{" "}
+                <span className="text-emerald-700">free, runs on this computer</span>
+                {estimate && estimate.cacheHits > 0 && (
+                  <span className="text-muted-foreground"> · {estimate.cacheHits} cached</span>
+                )}
+              </span>
+            ) : aiOn || (estimate?.aiCalls ?? 0) > 0 ? (
               <span>
                 {estimate ? estimate.aiCalls + estimate.bgRemovalCalls : "…"} AI calls (est.{" "}
                 {estimate ? formatCents(estimate.estimatedCostCents) : "…"})
@@ -243,7 +253,14 @@ function SettingsEditor({ batch }: { batch: BatchDTO }) {
           </DialogHeader>
           <div className="space-y-3 text-sm">
             <div>
-              <p className="mb-1 font-medium">AI edits {aiOn && <Badge variant="indigo">uses credits</Badge>}</p>
+              <p className="mb-1 font-medium">
+                AI edits{" "}
+                {aiOn && (
+                  <Badge variant={config?.localMode ? "green" : "indigo"}>
+                    {config?.localMode ? "local · free" : "uses credits"}
+                  </Badge>
+                )}
+              </p>
               {edits.ai.length ? (
                 <ul className="list-disc space-y-0.5 pl-5 text-muted-foreground">
                   {edits.ai.map((e) => (
@@ -262,8 +279,18 @@ function SettingsEditor({ batch }: { batch: BatchDTO }) {
                 ))}
               </ul>
             </div>
+            {config?.localMode && unsupported.length > 0 && (
+              <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
+                Skipped in local mode: {unsupported.join(", ")}.
+              </p>
+            )}
             <div className="rounded-md bg-muted p-3">
-              {estimate && estimate.aiCalls + estimate.bgRemovalCalls > 0 ? (
+              {config?.localMode ? (
+                <p className="text-emerald-700">
+                  Runs on this computer — no API calls, no credits.
+                  {estimate && estimate.cacheHits > 0 && ` ${estimate.cacheHits} reuse cached results.`}
+                </p>
+              ) : estimate && estimate.aiCalls + estimate.bgRemovalCalls > 0 ? (
                 <p>
                   <span className="font-semibold">{estimate.aiCalls + estimate.bgRemovalCalls} AI calls</span> ·
                   estimated <span className="font-semibold">{formatCents(estimate.estimatedCostCents)}</span>
@@ -372,6 +399,7 @@ function PreviewPanel({
   onSelect: (id: string) => void;
 }) {
   const qc = useQueryClient();
+  const local = useConfig().data?.localMode ?? false;
   const { data: images } = useImages(batchId);
   const image = images?.find((i) => i.id === selectedImage) ?? null;
   const [mode, setMode] = useState<"slider" | "edited" | "original">("slider");
@@ -442,7 +470,11 @@ function PreviewPanel({
             variant="outline"
             onClick={testAi}
             disabled={!needsAi || testing}
-            title={needsAi ? "Runs the AI step on this one image (uses 1 credit)" : "No AI edits enabled"}
+            title={
+              needsAi
+                ? `Runs the AI step on this one image (${local ? "free, local" : "uses 1 credit"})`
+                : "No AI edits enabled"
+            }
           >
             {testing ? <Loader2 className="animate-spin" /> : <FlaskConical />} Test AI on this image
           </Button>
@@ -471,7 +503,8 @@ function PreviewPanel({
       </div>
       {needsAi && !image?.hasAiResult && (
         <p className="text-xs text-muted-foreground">
-          Preview shows standard edits only. Use “Test AI on this image” to see the AI result (1 credit).
+          Preview shows standard edits only. Use “Test AI on this image” to see the AI result (
+          {local ? "free" : "1 credit"}).
         </p>
       )}
 

@@ -15,7 +15,17 @@ export const env = {
     return path.resolve(process.cwd(), process.env.STORAGE_DIR || "./storage");
   },
   get imageProvider(): string {
-    return (process.env.IMAGE_PROVIDER || "mock").toLowerCase();
+    return (process.env.IMAGE_PROVIDER || "local").toLowerCase();
+  },
+  /** True when edits run on this machine with open-source models (no API keys, no spend). */
+  get localMode(): boolean {
+    return this.imageProvider === "local";
+  },
+  get localModel(): string {
+    return (process.env.LOCAL_MODEL || "isnet").toLowerCase();
+  },
+  get modelsDir(): string {
+    return path.resolve(process.cwd(), process.env.MODELS_DIR || "./models");
   },
   get imageProviderApiKey(): string {
     return process.env.IMAGE_PROVIDER_API_KEY || "";
@@ -42,10 +52,10 @@ export const env = {
     return process.env.ANTHROPIC_QC_MODEL || "";
   },
   get aiCostPerCallCents(): number {
-    return int("AI_COST_PER_CALL_CENTS", 8);
+    return this.localMode ? 0 : int("AI_COST_PER_CALL_CENTS", 8);
   },
   get bgRemovalCostPerCallCents(): number {
-    return int("BG_REMOVAL_COST_PER_CALL_CENTS", 2);
+    return this.localMode || this.bgRemovalProvider === "local" ? 0 : int("BG_REMOVAL_COST_PER_CALL_CENTS", 2);
   },
   get maxConcurrentAiCalls(): number {
     return int("MAX_CONCURRENT_AI_CALLS", 3);

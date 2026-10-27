@@ -1,5 +1,6 @@
 import { env } from "../env";
 import { HttpBackgroundRemovalProvider } from "./bg-removal";
+import { LocalBackgroundRemovalProvider, LocalImageEditProvider } from "./local";
 import { MockBackgroundRemovalProvider, MockImageEditProvider } from "./mock";
 import { OpenAIImageEditProvider } from "./openai";
 import { ProviderError, type BackgroundRemovalProvider, type ImageEditProvider } from "./types";
@@ -13,6 +14,9 @@ let bgProvider: BackgroundRemovalProvider | null | undefined;
 export function getImageEditProvider(): ImageEditProvider {
   if (editProvider) return editProvider;
   switch (env.imageProvider) {
+    case "local":
+      editProvider = new LocalImageEditProvider();
+      break;
     case "mock":
       editProvider = new MockImageEditProvider();
       break;
@@ -25,11 +29,15 @@ export function getImageEditProvider(): ImageEditProvider {
   return editProvider;
 }
 
-/** Optional dedicated background-removal provider; null when not configured. */
+/**
+ * Optional dedicated background-removal provider; null when not configured.
+ * Local mode uses the local one unless another is set explicitly.
+ */
 export function getBackgroundRemovalProvider(): BackgroundRemovalProvider | null {
   if (bgProvider !== undefined) return bgProvider;
-  const name = env.bgRemovalProvider;
-  if (name === "mock") bgProvider = new MockBackgroundRemovalProvider();
+  const name = env.bgRemovalProvider || (env.localMode ? "local" : "");
+  if (name === "local") bgProvider = new LocalBackgroundRemovalProvider();
+  else if (name === "mock") bgProvider = new MockBackgroundRemovalProvider();
   else if ((name === "photoroom" || name === "removebg") && env.bgRemovalApiKey)
     bgProvider = new HttpBackgroundRemovalProvider(name, env.bgRemovalApiKey);
   else bgProvider = null;

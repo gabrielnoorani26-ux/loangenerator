@@ -23,6 +23,7 @@ import {
   type EditSettings,
   type ScenePreset,
 } from "@/lib/settings";
+import { useConfig } from "@/lib/client/hooks";
 import { exampleFilename, NAMING_TOKENS } from "@/lib/naming";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,7 @@ export function SettingsPanel({
   };
   const s = value;
   const aiOn = hasAiEdits(s.ai);
+  const local = useConfig().data?.localMode ?? false;
 
   return (
     <Accordion type="multiple" defaultValue={["preset", ...defaultOpen]} className="rounded-lg border bg-card px-4">
@@ -67,7 +69,9 @@ export function SettingsPanel({
         <AccordionTrigger>
           <span className="flex items-center gap-2">
             <Sparkles className="size-4 text-primary" /> AI Edits
-            <Badge variant={aiOn ? "indigo" : "gray"}>{aiOn ? "uses credits" : "off"}</Badge>
+            <Badge variant={aiOn ? (local ? "green" : "indigo") : "gray"}>
+              {aiOn ? (local ? "local · free" : "uses credits") : "off"}
+            </Badge>
           </span>
         </AccordionTrigger>
         <AccordionContent className="space-y-5">
@@ -113,6 +117,12 @@ export function SettingsPanel({
                     ))}
                   </SelectContent>
                 </Select>
+                {local && (
+                  <p className="text-xs text-muted-foreground">
+                    Local mode draws a simple procedural backdrop for each scene
+                    {s.ai.background.scenePreset === "custom" ? "; custom text needs a cloud AI provider" : ""}.
+                  </p>
+                )}
                 {s.ai.background.scenePreset === "custom" && (
                   <Textarea
                     placeholder="Describe the scene, e.g. light oak wood floor with soft window light"
@@ -157,6 +167,7 @@ export function SettingsPanel({
           </Field>
 
           <Field label="Cleanup">
+            {local && <CloudOnly />}
             <CheckGrid
               items={[
                 ["dust", "Dust / lint"],
@@ -173,12 +184,17 @@ export function SettingsPanel({
 
           <ToggleRow
             label="Straighten & center"
-            hint="Levels and centers the product without changing its angle"
+            hint={
+              local
+                ? "Centers the product in the frame (local mode doesn't rotate)"
+                : "Levels and centers the product without changing its angle"
+            }
             checked={s.ai.straighten}
             onChange={(v) => update((d) => void (d.ai.straighten = v))}
           />
 
           <Field label={`Custom instruction (${s.ai.customInstruction.length}/500)`}>
+            {local && <CloudOnly />}
             <Textarea
               maxLength={500}
               placeholder="Optional extra instruction applied to every image"
@@ -730,5 +746,13 @@ function PositionPicker({
       </div>
       <span className="text-xs text-muted-foreground">{value}</span>
     </div>
+  );
+}
+
+function CloudOnly() {
+  return (
+    <p className="text-xs text-amber-700">
+      Needs a cloud AI provider — skipped in local mode (set IMAGE_PROVIDER=openai in .env to enable).
+    </p>
   );
 }

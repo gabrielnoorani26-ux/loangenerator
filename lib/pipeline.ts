@@ -129,6 +129,8 @@ export async function runAiStep(
       width: input.width,
       height: input.height,
       prompt,
+      ai: settings.ai,
+      perImageInstruction: image.perImageInstruction,
       signal: deps.signal,
     });
   }

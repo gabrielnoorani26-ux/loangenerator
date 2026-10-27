@@ -19,6 +19,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "fixtures": "tsx scripts/make-fixtures.ts",
+    "models": "tsx scripts/download-models.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "heic-convert": "^2.1.0",
     "lucide-react": "^1.61.0",
     "next": "16.4.3",
+    "onnxruntime-node": "^1.31.1",
     "openai": "^7.45.0",
     "p-limit": "^7.3.3",
     "prisma": "^7.10.1",

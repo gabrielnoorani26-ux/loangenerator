@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Sparkles } from "lucide-react";
 import { apiSend } from "@/lib/client/api";
+import { useConfig } from "@/lib/client/hooks";
 import type { Estimate } from "@/lib/estimate";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,6 +65,7 @@ function RerunForm({
 }) {
   const [instruction, setInstruction] = useState(initialInstruction);
   const [busy, setBusy] = useState(false);
+  const local = useConfig().data?.localMode ?? false;
   const { data: estimate } = useQuery({
     queryKey: ["rerun-estimate", batchId, ids.join(","), instruction],
     queryFn: async () =>
@@ -97,19 +99,26 @@ function RerunForm({
         onChange={(e) => setInstruction(e.target.value)}
         aria-label="Re-run instruction"
       />
-      <div className="rounded-md bg-muted p-3 text-sm">
-        This will use{" "}
-        <span className="font-semibold">
-          {calls} AI call{calls === 1 ? "" : "s"}
-        </span>
-        {perCall != null && (
-          <>
-            {" "}
-            (est. <span className="font-semibold">{formatCents(Math.round(perCall * calls))}</span>)
-          </>
-        )}
-        .
-      </div>
+      {local ? (
+        <div className="rounded-md bg-muted p-3 text-sm">
+          Re-runs the local edits on {calls} image{calls === 1 ? "" : "s"} — free.{" "}
+          <span className="text-amber-700">Text instructions need a cloud AI provider and are ignored locally.</span>
+        </div>
+      ) : (
+        <div className="rounded-md bg-muted p-3 text-sm">
+          This will use{" "}
+          <span className="font-semibold">
+            {calls} AI call{calls === 1 ? "" : "s"}
+          </span>
+          {perCall != null && (
+            <>
+              {" "}
+              (est. <span className="font-semibold">{formatCents(Math.round(perCall * calls))}</span>)
+            </>
+          )}
+          .
+        </div>
+      )}
       <DialogFooter>
         <Button variant="outline" onClick={onCancel}>
           Cancel

@@ -363,14 +363,24 @@ function ConnectionTests() {
     <Card>
       <CardHeader className="flex-row items-center justify-between">
         <div>
-          <CardTitle>API connections</CardTitle>
+          <CardTitle>{config?.localMode ? "Local editing" : "API connections"}</CardTitle>
           <CardDescription>
-            Image provider: <span className="font-medium">{config?.imageProvider ?? "…"}</span>. Each configured key is
-            verified with a minimal request.
+            {config?.localMode ? (
+              <>
+                Edits run on this computer with a free open-source model — no API keys, no credits. The model downloads
+                once on first use.
+              </>
+            ) : (
+              <>
+                Image provider: <span className="font-medium">{config?.imageProvider ?? "…"}</span>. Each configured key
+                is verified with a minimal request.
+              </>
+            )}
           </CardDescription>
         </div>
         <Button variant="outline" onClick={run} disabled={running}>
-          {running ? <Loader2 className="animate-spin" /> : <Plug />} Test API connections
+          {running ? <Loader2 className="animate-spin" /> : <Plug />}{" "}
+          {config?.localMode ? "Check local model" : "Test API connections"}
         </Button>
       </CardHeader>
       {results && (

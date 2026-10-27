@@ -6,9 +6,10 @@ export const GET = route(async () =>
   ok({
     maxUploadMb: env.maxUploadMb,
     imageProvider: env.imageProvider,
-    imageProviderConfigured: env.imageProvider === "mock" || Boolean(env.imageProviderApiKey),
-    bgRemovalConfigured: Boolean(env.bgRemovalProvider && env.bgRemovalApiKey),
-    qcConfigured: Boolean(env.anthropicApiKey) || env.imageProvider === "mock",
+    localMode: env.localMode,
+    imageProviderConfigured: env.localMode || env.imageProvider === "mock" || Boolean(env.imageProviderApiKey),
+    bgRemovalConfigured: env.localMode || Boolean(env.bgRemovalProvider && env.bgRemovalApiKey),
+    qcConfigured: Boolean(env.anthropicApiKey) || env.localMode || env.imageProvider === "mock",
     aiCostPerCallCents: env.aiCostPerCallCents,
     bgRemovalCostPerCallCents: env.bgRemovalCostPerCallCents,
   }),

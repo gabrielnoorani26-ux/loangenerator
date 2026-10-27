@@ -7,6 +7,7 @@ Local-first web app for bulk-editing product photos (built for footwear wholesal
 - **Processing survives refreshes, closed tabs and server restarts.** The job queue lives in the database.
 - **One failed image never stops a batch.** Failures retry with backoff and then surface with a human-readable reason.
 - **Product preservation.** Every AI prompt is wrapped in a strict preservation rule, and an automated vision QC flags images where the product may have been altered.
+- **Free local mode (default).** With `IMAGE_PROVIDER=local` everything runs on your own computer with an open-source model: no API keys, no tokens, no per-image cost, offline after a one-time model download. See [Local mode](#local-mode-free-no-api-keys).
 
 ## Quick start
 
@@ -14,9 +15,10 @@ Requires Node.js 22+.
 
 ```bash
 npm install                 # also runs `prisma generate`
-cp .env.example .env        # defaults: SQLite + mock AI provider (no spend)
+cp .env.example .env        # defaults: SQLite + free local mode (no API keys)
 npx prisma migrate deploy   # create the SQLite database
 npm run db:seed             # the six built-in presets
+npm run models              # one-time ~180 MB model download (otherwise it happens on first use)
 npm run dev:all             # Next.js on :3000 + the queue worker
 ```
 
@@ -35,30 +37,50 @@ The queue worker is a separate long-running process:
 
 Alternatively, set `RUN_WORKER_IN_APP=true` to start the worker inside the Next.js server process (via `instrumentation.ts`). **Run exactly one worker per database**: the concurrency limit is per process.
 
+## Local mode (free, no API keys)
+
+`IMAGE_PROVIDER=local` (the default) replaces the paid AI services with processing on your own machine:
+
+| AI option                     | Local mode                                                                                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Background → solid color      | ✅ An open-source segmentation model ([IS-Net](https://github.com/xuebinqin/DIS), Apache-2.0, via ONNX Runtime) cuts out the product           |
+| Background → scene presets    | ✅ Product placed on a procedurally drawn backdrop (studio gray, marble, wood, concrete, pavement, sand, pastel). Custom scene text is ignored |
+| Shadow / contact / reflection | ✅ Synthesized from the product's silhouette                                                                                                   |
+| Lighting & color correction   | ✅ Gray-world white balance, levels stretch, brighten, shadow/highlight curves                                                                 |
+| Straighten & center           | ✅ Centers the product (no rotation)                                                                                                           |
+| Cleanup, custom instructions  | ❌ Needs a generative model — skipped, and the UI says so                                                                                      |
+| Vision QC                     | ✅ Local: compares product silhouette and colors between the original and the edit                                                             |
+
+The model downloads once into `MODELS_DIR` (`npm run models`, or automatically on the first image) and is verified by SHA-256. After that no network is needed. `LOCAL_MODEL=u2netp` swaps in a 4.5 MB model that is faster but has softer edges. Expect roughly 1–3 s per image on a modern laptop CPU. Estimates show **free** and the usage counters still count local edits.
+
+To use the cloud providers instead, set `IMAGE_PROVIDER=openai` plus the API keys below.
+
 ## Environment variables
 
 All keys are read server-side only (never `NEXT_PUBLIC_`). See `.env.example` for the documented defaults.
 
-| Variable                           | Default             | Purpose                                                                             |
-| ---------------------------------- | ------------------- | ----------------------------------------------------------------------------------- |
-| `DATABASE_URL`                     | `file:./dev.db`     | SQLite file (see "Switching to Postgres")                                           |
-| `STORAGE_DIR`                      | `./storage`         | Originals, AI intermediates, outputs, thumbnails                                    |
-| `IMAGE_PROVIDER`                   | `mock`              | `openai` or `mock`                                                                  |
-| `IMAGE_PROVIDER_API_KEY`           | —                   | Key for the image provider                                                          |
-| `IMAGE_PROVIDER_MODEL`             | `gpt-image-2`       | Model id (never hard-coded; check the provider's current list)                      |
-| `OPENAI_IMAGE_QUALITY`             | `high`              | `low` / `medium` / `high` / `auto` (newer models: `xhigh`, `max`)                   |
-| `OPENAI_INPUT_FIDELITY`            | —                   | `high` only for models that support it (gpt-image-1.5); leave empty for gpt-image-2 |
-| `BG_REMOVAL_PROVIDER`              | —                   | `photoroom` or `removebg`; used only for "white background" with no other AI edits  |
-| `BG_REMOVAL_API_KEY`               | —                   | If empty, the main image provider is used instead                                   |
-| `ANTHROPIC_API_KEY`                | —                   | Vision QC. Without it QC is skipped (or mocked when `IMAGE_PROVIDER=mock`)          |
-| `ANTHROPIC_QC_MODEL`               | `claude-opus-5-5`   | Model for QC                                                                        |
-| `AI_COST_PER_CALL_CENTS`           | `8`                 | Used for cost estimates only — set from your provider's pricing                     |
-| `BG_REMOVAL_COST_PER_CALL_CENTS`   | `2`                 | Same, for background removal                                                        |
-| `MAX_CONCURRENT_AI_CALLS`          | `3`                 | Initial value; the Settings page (1–5) overrides it                                 |
-| `MAX_RETRIES`                      | `2`                 | Initial value; the Settings page (0–5) overrides it                                 |
-| `MAX_UPLOAD_MB`                    | `25`                | Per-file upload limit                                                               |
-| `RUN_WORKER_IN_APP`                | `false`             | Run the worker inside the Next.js server                                            |
-| `MOCK_FAIL_RATE` / `MOCK_DELAY_MS` | `0.1` / `1000-3000` | Mock provider behaviour (tests use `0` / `0-0`)                                     |
+| Variable                           | Default                   | Purpose                                                                                               |
+| ---------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                     | `file:./dev.db`           | SQLite file (see "Switching to Postgres")                                                             |
+| `STORAGE_DIR`                      | `./storage`               | Originals, AI intermediates, outputs, thumbnails                                                      |
+| `IMAGE_PROVIDER`                   | `local`                   | `local` (free, on this machine), `openai` or `mock`                                                   |
+| `LOCAL_MODEL`                      | `isnet`                   | Local segmentation model: `isnet` (~180 MB, best) or `u2netp` (~4.5 MB, fast)                         |
+| `MODELS_DIR`                       | `./models`                | Where local models are stored                                                                         |
+| `IMAGE_PROVIDER_API_KEY`           | —                         | Key for the image provider                                                                            |
+| `IMAGE_PROVIDER_MODEL`             | `gpt-image-2`             | Model id (never hard-coded; check the provider's current list)                                        |
+| `OPENAI_IMAGE_QUALITY`             | `high`                    | `low` / `medium` / `high` / `auto` (newer models: `xhigh`, `max`)                                     |
+| `OPENAI_INPUT_FIDELITY`            | —                         | `high` only for models that support it (gpt-image-1.5); leave empty for gpt-image-2                   |
+| `BG_REMOVAL_PROVIDER`              | — (`local` in local mode) | `local`, `photoroom` or `removebg`; used only for "white background" with no other AI edits           |
+| `BG_REMOVAL_API_KEY`               | —                         | If empty, the main image provider is used instead                                                     |
+| `ANTHROPIC_API_KEY`                | —                         | Vision QC. Without it QC runs locally in local mode (mocked when `IMAGE_PROVIDER=mock`, else skipped) |
+| `ANTHROPIC_QC_MODEL`               | `claude-opus-5-5`         | Model for QC                                                                                          |
+| `AI_COST_PER_CALL_CENTS`           | `8`                       | Used for cost estimates only — set from your provider's pricing                                       |
+| `BG_REMOVAL_COST_PER_CALL_CENTS`   | `2`                       | Same, for background removal                                                                          |
+| `MAX_CONCURRENT_AI_CALLS`          | `3`                       | Initial value; the Settings page (1–5) overrides it                                                   |
+| `MAX_RETRIES`                      | `2`                       | Initial value; the Settings page (0–5) overrides it                                                   |
+| `MAX_UPLOAD_MB`                    | `25`                      | Per-file upload limit                                                                                 |
+| `RUN_WORKER_IN_APP`                | `false`                   | Run the worker inside the Next.js server                                                              |
+| `MOCK_FAIL_RATE` / `MOCK_DELAY_MS` | `0.1` / `1000-3000`       | Mock provider behaviour (tests use `0` / `0-0`)                                                       |
 
 ## How it works
 
@@ -118,6 +140,8 @@ Prisma 7 uses driver adapters, so the switch is two small edits rather than one 
 Then set `DATABASE_URL` and run `npx prisma migrate dev` to create fresh Postgres migrations. JSON-in-string columns (`tags`, `qcIssues`, `brandList`, `watermarkLibrary`) work unchanged. For cloud storage, implement `StorageAdapter` (`lib/storage.ts`) for S3/R2.
 
 ## Known limitations
+
+- **Local mode is not generative.** It can cut out, recolor the backdrop, add shadows, fix lighting and center, but not remove dust/tags/props or follow free-text instructions. Scene presets are simple procedural textures, not photographic scenes. Light products on light backgrounds (e.g. a white sneaker on white) segment less reliably, and local QC flags those for review.
 
 - **Real providers are unverified in this build.** The OpenAI and Anthropic integrations were written against the current SDK typings (`openai@7`, `@anthropic-ai/sdk@1`) and unit-tested with injected fetches/mocks, but no live call was made. The Photoroom/remove.bg integration follows their documented remove.bg-compatible API, also unverified live. Run _Settings → Test API connections_ and a 2–3 image test batch before a big run.
 - **OpenAI output resolution.** GPT image models return at most 3840×2160 (sizes above 2560×1440 are experimental); BatchLens requests ≤2048 px on the long edge, matched to the photo's aspect ratio. For very large outputs the AI result is upscaled by the standard edits.

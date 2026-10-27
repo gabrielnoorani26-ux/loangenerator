@@ -1,3 +1,5 @@
+import type { AiSettings } from "../settings";
+
 /**
  * Provider interfaces. Add a new AI provider by implementing ImageEditProvider
  * and registering it in ./index.ts (see README → "Adding a provider").
@@ -10,6 +12,9 @@ export interface ImageEditRequest {
   height: number;
   /** Full prompt from lib/prompt-builder (includes the Product Preservation Rule) */
   prompt: string;
+  /** Structured settings behind the prompt (used by the local provider, which has no language model) */
+  ai?: AiSettings;
+  perImageInstruction?: string | null;
   signal?: AbortSignal;
 }
 

@@ -53,6 +53,8 @@ export function useAppSettings() {
 export interface ClientConfig {
   maxUploadMb: number;
   imageProvider: string;
+  /** Edits run on this machine: free, no API keys */
+  localMode: boolean;
   imageProviderConfigured: boolean;
   bgRemovalConfigured: boolean;
   qcConfigured: boolean;

@@ -19,7 +19,8 @@ export interface Estimate {
 }
 
 export function bgRemovalAvailable(): boolean {
-  return env.bgRemovalProvider === "mock" || Boolean(env.bgRemovalProvider && env.bgRemovalApiKey);
+  const name = env.bgRemovalProvider || (env.localMode ? "local" : "");
+  return name === "mock" || name === "local" || Boolean(name && env.bgRemovalApiKey);
 }
 
 /** Count the API calls a run would make, accounting for cache hits and use-original. */

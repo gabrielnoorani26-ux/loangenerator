@@ -6,6 +6,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { z } from "zod";
 import { env } from "./env";
+import { maskBox } from "./local/edits";
+import { segment as localSegment, warmUp, type Segmenter } from "./local/segment";
 
 export const QC_INSTRUCTION =
   'Compare these two product photos. The first is the original, the second is the edited version. Check whether the product itself was altered in any way (shape, color, details, logos, hardware, stitching, missing or extra parts) and whether the requested edits were done cleanly (no artifacts, leftover background, halos, or distortions). Respond with only JSON: {"score": 0-100, "issues": [short strings], "verdict": "pass" | "review"}. 100 means the product is perfectly preserved and edits are clean.';
@@ -163,11 +165,77 @@ export class MockQcProvider implements QcProvider {
   async testConnection() {}
 }
 
+/**
+ * Offline QC for local mode: segments both images, normalizes each product
+ * cut-out to its bounding box (so centering doesn't count as a change) and
+ * scores silhouette overlap plus color drift inside the product.
+ */
+export class LocalQcProvider implements QcProvider {
+  readonly name = "local";
+  constructor(private readonly segment: Segmenter = localSegment) {}
+
+  async compare(originalJpeg: Buffer, editedJpeg: Buffer): Promise<string> {
+    const size = 96;
+    const a = await this.productTile(originalJpeg, size);
+    // A synthesized reflection is segmented as part of the product: cap the
+    // edited box to the original's aspect ratio, anchored at the top.
+    const b = a ? await this.productTile(editedJpeg, size, a.aspect) : null;
+    if (!a || !b) {
+      return JSON.stringify({ score: 0, issues: ["No product detected in one of the images"], verdict: "review" });
+    }
+    let inter = 0;
+    let union = 0;
+    let diff = 0;
+    for (let i = 0; i < size * size; i++) {
+      const ina = a.mask[i] >= 128;
+      const inb = b.mask[i] >= 128;
+      if (ina || inb) union++;
+      if (ina && inb) {
+        inter++;
+        for (let c = 0; c < 3; c++) diff += Math.abs(a.rgb[i * 3 + c] - b.rgb[i * 3 + c]);
+      }
+    }
+    const iou = union ? inter / union : 0;
+    const meanDiff = inter ? diff / (inter * 3) : 255;
+    // Some color drift is expected from lighting toggles; penalize beyond that.
+    const score = Math.max(0, Math.min(100, Math.round(iou * 100 - Math.max(0, meanDiff - 12) * 1.5)));
+    const issues: string[] = [];
+    if (iou < 0.9) issues.push("Product outline differs from the original (possible cut-off or leftover background)");
+    if (meanDiff > 25) issues.push("Product colors shifted noticeably");
+    return JSON.stringify({ score, issues, verdict: score >= 80 ? "pass" : "review" });
+  }
+
+  private async productTile(jpeg: Buffer, size: number, maxAspect?: number) {
+    const mask = await this.segment(jpeg);
+    const box = maskBox(mask);
+    if (!box) return null;
+    const width = box.x1 - box.x0 + 1;
+    let height = box.y1 - box.y0 + 1;
+    if (maxAspect && height / width > maxAspect * 1.05) height = Math.max(1, Math.round(width * maxAspect));
+    const region = { left: box.x0, top: box.y0, width, height };
+    const [m, rgb] = await Promise.all([
+      sharp(mask.data, { raw: { width: mask.width, height: mask.height, channels: 1 } })
+        .extract(region)
+        .resize(size, size, { fit: "fill" })
+        .extractChannel(0)
+        .raw()
+        .toBuffer(),
+      sharp(jpeg).removeAlpha().extract(region).resize(size, size, { fit: "fill" }).raw().toBuffer(),
+    ]);
+    return { mask: m, rgb, aspect: height / width };
+  }
+
+  async testConnection() {
+    await warmUp();
+  }
+}
+
 let qcProvider: QcProvider | null | undefined;
-/** Anthropic when a key is set; mock when IMAGE_PROVIDER=mock; otherwise null (QC skipped). */
+/** Anthropic when a key is set; local in local mode; mock when IMAGE_PROVIDER=mock; otherwise null (QC skipped). */
 export function getQcProvider(): QcProvider | null {
   if (qcProvider !== undefined) return qcProvider;
   if (env.anthropicApiKey && env.anthropicQcModel) qcProvider = new AnthropicQcProvider();
+  else if (env.localMode) qcProvider = new LocalQcProvider();
   else if (env.imageProvider === "mock") qcProvider = new MockQcProvider();
   else qcProvider = null;
   return qcProvider;

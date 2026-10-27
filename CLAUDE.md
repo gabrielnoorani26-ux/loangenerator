@@ -16,6 +16,7 @@ Read `README.md` for product behaviour and `docs/PLAN.md` for design decisions a
 | New migration       | `npm run db:migrate -- --name <name>` then `npm run db:generate`                                                                     |
 | Apply migrations    | `npm run db:deploy`                                                                                                                  |
 | Seed presets        | `npm run db:seed`                                                                                                                    |
+| Local model         | `npm run models` (one-time download into `./models`; `.npmrc` skips onnxruntime's CUDA fetch)                                        |
 | Sample photos       | `npm run fixtures` or `npx tsx scripts/make-fixtures.ts 50 /tmp/fifty`                                                               |
 
 ## Architecture map
@@ -27,7 +28,8 @@ Read `README.md` for product behaviour and `docs/PLAN.md` for design decisions a
 - `lib/pipeline.ts` — per-image processing with injected storage/providers/QC (`processImage`, `runAiStep`). `onAiResult` persists AI results before standard edits (no double charge on retry).
 - `lib/queue.ts` — every DB state change for jobs (start/pause/resume/cancel, claim, complete, fail+backoff, stuck recovery, requeue). Counters are recomputed (`recountBatch`) in the same transaction as status changes.
 - `lib/worker.ts` — the loop: claims up to the concurrency limit, heartbeats locks, halves concurrency + pauses on 429, serializes filename assignment per batch. `scripts/worker.ts` runs it standalone; `instrumentation.ts` runs it in-app when `RUN_WORKER_IN_APP=true`.
-- `lib/providers/` — `ImageEditProvider` (`openai`, `mock`), `BackgroundRemovalProvider` (`photoroom`/`removebg`, mock), `ProviderError` mapping.
+- `lib/providers/` — `ImageEditProvider` (`local` default, `openai`, `mock`), `BackgroundRemovalProvider` (`local`, `photoroom`/`removebg`, mock), `ProviderError` mapping.
+- `lib/local/` — free offline mode: `models.ts` (download + sha256), `segment.ts` (ONNX segmentation, `setSegmenter()` for tests), `edits.ts` (backgrounds/shadows/lighting/centering from structured `AiSettings`), `support.ts` (client-safe list of options local mode skips).
 - `lib/qc.ts` — Anthropic vision QC (+ mock), zod parsing, retry once, fallback verdict "review".
 - `lib/storage.ts` — `StorageAdapter` + `LocalStorageAdapter`, key sanitization (path-traversal safe), key layout, `thumbKeyFor`.
 - `lib/export.ts` — export planning (pure) + archiver streaming. `lib/naming.ts`, `lib/smart-fill.ts` — pure, tested.
@@ -44,4 +46,5 @@ Read `README.md` for product behaviour and `docs/PLAN.md` for design decisions a
 - `next.config.ts` disables Cache Components (dynamic, local tool). Next 16 docs ship in `node_modules/next/dist/docs/` — check them before using unfamiliar Next APIs.
 - React compiler lint rules are on: no `setState` directly in effects, no ref access during render. Key a child component to reset local state instead.
 - archiver is v8: `new ZipArchive(...)`, not `archiver("zip")`.
+- Local mode must not need network beyond the one-time model download; unit tests inject a fake segmenter and never load the real model.
 - Tests: unit tests share one SQLite file and run sequentially; use `setProviders()` / `setQcProvider()` to inject fakes.

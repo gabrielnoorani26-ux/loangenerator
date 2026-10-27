@@ -34,6 +34,17 @@ tests/ unit/*.test.ts e2e/happy-path.spec.ts
 - **QC: Anthropic Messages API** (`@anthropic-ai/sdk@1`), two base64 JPEG image blocks + the spec instruction, `output_config.effort: "low"`, server-side refusal fallback enabled for models that support it. Model from `ANTHROPIC_QC_MODEL`.
 - The OpenAI, Photoroom and remove.bg documentation hosts and API hosts were blocked by this build environment's network policy, so the code was written against the installed SDK typings and published docs summaries; none of the three was called live. Pricing pages were also unreachable, so cost-per-call is configurable (`AI_COST_PER_CALL_CENTS`, `BG_REMOVAL_COST_PER_CALL_CENTS`).
 
+## Local mode (free, offline)
+
+Added for personal use without API keys or token spend; it is the default `IMAGE_PROVIDER`.
+
+- **Segmentation:** rembg's ONNX exports of IS-Net general-use (default, 1024² input) and U²-Net-p (320², fast), both Apache-2.0, run with `onnxruntime-node` (CPU). The model is downloaded once from the rembg GitHub release into `MODELS_DIR` and checked against a pinned SHA-256. `.npmrc` sets `onnxruntime-node-install=skip` so npm doesn't try to fetch CUDA libraries on Linux. The CPU binaries ship in the npm package. Inference is serialized (one ONNX session, `p-limit(1)`) because parallel CPU runs only add memory.
+- **Structured settings, not the prompt:** `ImageEditRequest` now also carries `ai` + `perImageInstruction`; the local provider (`lib/local/edits.ts`) works from those. The prompt hash and caching are unchanged, so switching providers keeps the cache semantics.
+- **Backdrops** are procedural: gradients plus seamless `feTurbulence` tiles, rendered once per process and tiled, since librsvg turbulence is slow at full size.
+- **Not possible locally:** cleanup, custom instructions, custom scene text, rotation for "straighten". The settings panel marks these "needs a cloud AI provider" and the start dialog lists what will be skipped.
+- **QC** (`LocalQcProvider`) segments both images, normalizes each to its product bounding box (the box is capped to the original's aspect ratio so a synthesized reflection doesn't count) and scores silhouette IoU minus color drift. It is a heuristic safety net. Low-contrast products fall back to "review".
+- Costs are 0 in local mode (`env.aiCostPerCallCents` / `bgRemovalCostPerCallCents`). Usage counters still record local edits.
+
 ## Spec conflicts and the closest alternative chosen
 
 | Spec                                                  | Issue                                                                                                          | Chosen alternative                                                                                                                      |
